@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
@@ -36,7 +36,6 @@
     const icon180 = generateAppIcon(180);
     const icon512 = generateAppIcon(512);
 
-    // Web App Manifest
     const manifest = {
       name: '全能生活本',
       short_name: '全能本',
@@ -56,14 +55,12 @@
     link.href = manifestURL;
     document.head.appendChild(link);
 
-    // iOS apple-touch-icon
     const appleIcon = document.createElement('link');
     appleIcon.rel = 'apple-touch-icon';
     appleIcon.href = icon180;
     document.head.appendChild(appleIcon);
   </script>
 
-  <!-- 注册 Service Worker 并监听更新 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -91,8 +88,8 @@
     body {
       background: linear-gradient(145deg, #fff0f5 0%, #ffe0ec 100%);
       font-family: 'Segoe UI', 'Quicksand', system-ui, sans-serif;
-      /* 底部安全区域预留空间 */
-      padding: 12px 12px calc(20px + env(safe-area-inset-bottom, 20px));
+      /* 关键修复：顶部增加安全区，底部增加安全区 */
+      padding: calc(12px + env(safe-area-inset-top, 0px)) 12px calc(20px + env(safe-area-inset-bottom, 20px));
       display: flex;
       justify-content: center;
       color: #2d1b3a;
@@ -139,7 +136,7 @@
       color: var(--text-main);
     }
     .app-container { max-width: 600px; width: 100%; margin: 0 auto; }
-    /* 视图切换动画 */
+    
     .view {
       display: none;
       opacity: 0;
@@ -149,6 +146,7 @@
       display: block;
       opacity: 1;
     }
+    
     .card-section, .stats-section {
       background: var(--card-bg);
       border-radius: 36px;
@@ -210,6 +208,7 @@
       box-shadow: inset 0 2px 6px var(--btn-active-shadow), 0 2px 0 #b55179;
       color: #4a1e3a;
     }
+    
     /* 记账模块 */
     .type-toggle { display: flex; gap: 16px; margin-bottom: 16px; justify-content: center; }
     .type-btn {
@@ -818,7 +817,6 @@
       margin-left: 8px;
       color: #5a3e2e;
     }
-    /* 所有按钮的触摸反馈 */
     button:active {
       transform: scale(0.95);
     }
@@ -946,7 +944,7 @@
 
 <script>
   (function(){
-    // ========== 存储KEY ==========
+    // 存储KEY
     const STORAGE_KEY = 'dopa_work_v17';
     const BK_STORAGE_KEY = 'dopa_bookkeeping_v8';
     const NOTE_STORAGE_KEY = 'dopa_note_v5';
@@ -980,7 +978,6 @@
     let expenseChart, incomeChart, categoryChart;
     let currentSelectedWorkDate = null;
 
-    // 触感反馈
     function haptic() {
       if (window.navigator && window.navigator.vibrate) {
         window.navigator.vibrate(10);
@@ -1614,7 +1611,6 @@
       input.focus();
     }
 
-    // ========== 视图切换 ==========
     function switchView(view){
       if(passwordEnabled && !isUnlocked && view!=='settings'){ showLock(()=>switchView(view)); return; }
       document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -1626,7 +1622,6 @@
       haptic();
     }
 
-    // ========== 初始化 ==========
     function initAll(){
       loadAll();
       updatePasswordLockStatus();
@@ -1634,7 +1629,6 @@
       document.getElementById('themeMintBtn').onclick=()=>setTheme('mint');
       document.getElementById('themeSkyBtn').onclick=()=>setTheme('sky');
       
-      // 工时
       for(let y=new Date().getFullYear()-5;y<=new Date().getFullYear()+5;y++) document.getElementById('workYearSelect').add(new Option(y,y));
       document.getElementById('workYearSelect').value=workDisplayYear;
       for(let m=1;m<=12;m++) document.getElementById('workMonthSelect').add(new Option(m,m));
@@ -1649,9 +1643,7 @@
       collapseHeader.onclick = () => collapseContent.classList.toggle('show');
       document.getElementById('closeModalBtn').onclick=closeModal;
       document.getElementById('dayModal').onclick=e=>{ if(e.target===document.getElementById('dayModal')) closeModal(); };
-      // 女生日历
       initGirlCalendar();
-      // 记账
       document.getElementById('prevMonthBk').onclick=()=>changeBkMonth(-1);
       document.getElementById('nextMonthBk').onclick=()=>changeBkMonth(1);
       document.getElementById('addBkBtn').onclick=addBookkeeping;
@@ -1664,7 +1656,6 @@
         renderBkCategoryGrid();
       }));
       renderBkCategoryGrid(); refreshBookkeepingUI();
-      // 笔记
       renderNoteCategories(); renderNoteCards(); 
       if(currentNoteId) loadNoteToEditor(); else { document.getElementById('noteTitleInput').value = ''; document.getElementById('noteEditor').innerHTML = ''; }
       document.getElementById('newNoteBtn').onclick=newNote;
@@ -1672,7 +1663,6 @@
       renderTodoCategories(); renderTodoItems();
       document.getElementById('addTodoBtn').onclick=addNewTodo;
       bindNoteToolbar();
-      // Tab 切换
       const noteTabBtns = document.querySelectorAll('.note-tab');
       const notePanel = document.getElementById('notePanel');
       const todoPanel = document.getElementById('todoPanel');
@@ -1692,9 +1682,7 @@
           }
         });
       });
-      // 底部导航
       document.querySelectorAll('.nav-item').forEach(item=>item.addEventListener('click',()=>switchView(item.dataset.view)));
-      // 设置
       document.getElementById('exportDataBtn').onclick=()=>{ const data={records,workCategories,bkRecords,notes:{categories:noteCategories,notes},todoCategories,todos,menstrualData,cycleLength,periodDays,importantDays}; const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'})); a.download=`backup_${Date.now()}.json`; a.click(); };
       document.getElementById('importDataBtn').onclick=()=>{ const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json'; inp.onchange=e=>{ const f=e.target.files[0]; const reader=new FileReader(); reader.onload=ev=>{ const d=JSON.parse(ev.target.result); if(d.records) records=d.records; if(d.workCategories) workCategories=d.workCategories; if(d.bkRecords) bkRecords=d.bkRecords; if(d.notes){ noteCategories=d.notes.categories||noteCategories; notes=d.notes.notes||notes; } if(d.todoCategories) todoCategories=d.todoCategories; if(d.todos) todos=d.todos; if(d.menstrualData) menstrualData=d.menstrualData; if(d.cycleLength) cycleLength=d.cycleLength; if(d.periodDays) periodDays=d.periodDays; if(d.importantDays) importantDays=d.importantDays; saveAll(); renderWorkCalendar(); refreshBookkeepingUI(); renderNoteCategories(); renderNoteCards(); loadNoteToEditor(); renderTodoCategories(); renderTodoItems(); initGirlCalendar(); alert('导入成功'); }; reader.readAsText(f); }; inp.click(); };
       document.getElementById('clearAllDataBtn').onclick=confirmClearAllData;
