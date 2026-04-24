@@ -88,8 +88,17 @@
     body {
       background: linear-gradient(145deg, #fff0f5 0%, #ffe0ec 100%);
       font-family: 'Segoe UI', 'Quicksand', system-ui, sans-serif;
-      /* 关键修复：顶部增加安全区，底部增加安全区 */
-      padding: calc(12px + env(safe-area-inset-top, 0px)) 12px calc(20px + env(safe-area-inset-bottom, 20px));
+      /* 关键修复：顶部使用 constant 和 env 双重安全区，并确保最小 20px */
+      padding:
+        /* 顶部：安全区 + 基础内边距 */
+        calc(20px + constant(safe-area-inset-top, 0px))
+        12px
+        /* 底部：安全区 + 基础内边距 */
+        calc(20px + constant(safe-area-inset-bottom, 0px));
+      padding:
+        calc(20px + env(safe-area-inset-top, 0px))
+        12px
+        calc(20px + env(safe-area-inset-bottom, 0px));
       display: flex;
       justify-content: center;
       color: #2d1b3a;
@@ -186,6 +195,8 @@
       border-radius: 60px;
       border: 3px solid #ffa56e;
       box-shadow: 0 5px 0 #d4895e;
+      /* 底部安全区加倍保障 */
+      padding-bottom: calc(6px + constant(safe-area-inset-bottom, 0px));
       padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
     }
     .nav-item {
