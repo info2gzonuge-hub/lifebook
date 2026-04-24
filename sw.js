@@ -1,4 +1,4 @@
-﻿// sw.js - 全能生活本 Service Worker (离线缓存)
+// sw.js - 全能生活本 Service Worker (离线缓存)
 const CACHE_NAME = 'dopa-lifebook-v2';
 
 const PRECACHE_URLS = [
