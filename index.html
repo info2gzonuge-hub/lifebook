@@ -88,21 +88,25 @@
     body {
       background: linear-gradient(145deg, #fff0f5 0%, #ffe0ec 100%);
       font-family: 'Segoe UI', 'Quicksand', system-ui, sans-serif;
-      /* 关键修复：顶部使用 constant 和 env 双重安全区，并确保最小 20px */
-      padding:
-        /* 顶部：安全区 + 基础内边距 */
-        calc(20px + constant(safe-area-inset-top, 0px))
-        12px
-        /* 底部：安全区 + 基础内边距 */
-        calc(20px + constant(safe-area-inset-bottom, 0px));
-      padding:
-        calc(20px + env(safe-area-inset-top, 0px))
-        12px
-        calc(20px + env(safe-area-inset-bottom, 0px));
+      /* 底部安全区预留，顶部移除内边距，改用占位条 */
+      padding: 0 12px calc(20px + env(safe-area-inset-bottom, 20px));
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
       color: #2d1b3a;
       transition: background 0.2s, color 0.2s;
+      min-height: 100vh;
+    }
+    /* 顶部占位条：根据刘海高度 + 基础间距动态设置，完美避开遮挡 */
+    .top-safe-area {
+      width: 100%;
+      height: calc(20px + env(safe-area-inset-top, 0px));
+      /* 兼容旧版 iOS */
+      height: calc(20px + constant(safe-area-inset-top, 0px));
+      height: calc(20px + env(safe-area-inset-top, 0px));
+      background: transparent;
+      flex-shrink: 0;
     }
     :root {
       --bg-start: #fff0f5;
@@ -195,8 +199,6 @@
       border-radius: 60px;
       border: 3px solid #ffa56e;
       box-shadow: 0 5px 0 #d4895e;
-      /* 底部安全区加倍保障 */
-      padding-bottom: calc(6px + constant(safe-area-inset-bottom, 0px));
       padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
     }
     .nav-item {
@@ -834,875 +836,880 @@
   </style>
 </head>
 <body>
-<div class="app-container">
-  <div class="theme-bar">
-    <button class="theme-btn" id="themeDefaultBtn">🌈 默认粉</button>
-    <button class="theme-btn" id="themeMintBtn">🌿 薄荷绿</button>
-    <button class="theme-btn" id="themeSkyBtn">☁️ 天空蓝</button>
-  </div>
+  <!-- 核心修复：占位条避免刘海遮挡 -->
+  <div class="top-safe-area"></div>
 
-  <!-- 记账视图 -->
-  <div id="bookkeepingView" class="view active">
-    <div class="card-section"><div class="section-title">💰 记账 · 月度账单</div>
-    <div class="type-toggle" id="bkTypeToggle"><div class="type-btn active" data-type="expense">💸 支出</div><div class="type-btn" data-type="income">💰 收入</div></div>
-    <div class="category-grid" id="bkCategoryGrid"></div>
-    <div class="record-form-icon"><input type="number" id="bkAmount" placeholder="金额" step="0.01"><input type="text" id="bkNote" placeholder="备注"><button class="add-btn" id="addBkBtn">➕ 添加</button></div>
-    <div class="month-selector"><button class="month-btn" id="prevMonthBk">←</button><span class="current-month" id="currentMonthBk"></span><button class="month-btn" id="nextMonthBk">→</button></div>
-    <div class="month-summary"><div class="summary-item"><div class="summary-label">总收入</div><div class="summary-number income-num" id="monthIncomeBk">0</div></div><div class="summary-item"><div class="summary-label">总支出</div><div class="summary-number expense-num" id="monthExpenseBk">0</div></div><div class="summary-item"><div class="summary-label">结余</div><div class="summary-number" id="monthBalanceBk">0</div></div></div>
-    <div class="pie-charts-row"><div class="pie-chart-card"><div class="pie-title">📉 支出构成</div><canvas id="expensePieChart" width="200" height="200"></canvas></div><div class="pie-chart-card"><div class="pie-title">📈 收入构成</div><canvas id="incomePieChart" width="200" height="200"></canvas></div></div>
-    <button class="manage-btn" id="manageRecordsBtn">📋 管理本月记录</button></div>
-  </div>
-  <div id="recordModal" class="record-modal"><div class="record-modal-content"><div style="display:flex; justify-content:space-between;"><span class="section-title">📋 本月流水记录</span><button id="closeRecordModalBtn" style="background:none; border:none; font-size:1.5rem;">✕</button></div><div id="recordListContainer"></div></div></div>
+  <div class="app-container">
+    <!-- 主题栏 -->
+    <div class="theme-bar">
+      <button class="theme-btn" id="themeDefaultBtn">🌈 默认粉</button>
+      <button class="theme-btn" id="themeMintBtn">🌿 薄荷绿</button>
+      <button class="theme-btn" id="themeSkyBtn">☁️ 天空蓝</button>
+    </div>
 
-  <!-- 记工时视图 -->
-  <div id="calendarView" class="view">
-    <div class="card-section">
-      <div class="section-title">📅 记工时 · 分类薪资</div>
-      <div class="month-year-picker"><select id="workYearSelect"></select> 年 <select id="workMonthSelect"></select> 月</div>
-      <div class="collapse-panel">
-        <div class="collapse-header" id="collapseHeader">⚙️ 工时分类管理 <span>▼</span></div>
-        <div class="collapse-content" id="collapseContent">
-          <div class="category-list" id="categoryList"></div>
-          <div class="add-category">
-            <input type="text" id="newCategoryName" placeholder="新分类名称">
-            <input type="number" id="newCategoryRate" placeholder="时薪" step="0.5">
-            <button class="add-btn" id="addCategoryBtn">➕ 添加</button>
+    <!-- 记账视图 -->
+    <div id="bookkeepingView" class="view active">
+      <div class="card-section"><div class="section-title">💰 记账 · 月度账单</div>
+      <div class="type-toggle" id="bkTypeToggle"><div class="type-btn active" data-type="expense">💸 支出</div><div class="type-btn" data-type="income">💰 收入</div></div>
+      <div class="category-grid" id="bkCategoryGrid"></div>
+      <div class="record-form-icon"><input type="number" id="bkAmount" placeholder="金额" step="0.01"><input type="text" id="bkNote" placeholder="备注"><button class="add-btn" id="addBkBtn">➕ 添加</button></div>
+      <div class="month-selector"><button class="month-btn" id="prevMonthBk">←</button><span class="current-month" id="currentMonthBk"></span><button class="month-btn" id="nextMonthBk">→</button></div>
+      <div class="month-summary"><div class="summary-item"><div class="summary-label">总收入</div><div class="summary-number income-num" id="monthIncomeBk">0</div></div><div class="summary-item"><div class="summary-label">总支出</div><div class="summary-number expense-num" id="monthExpenseBk">0</div></div><div class="summary-item"><div class="summary-label">结余</div><div class="summary-number" id="monthBalanceBk">0</div></div></div>
+      <div class="pie-charts-row"><div class="pie-chart-card"><div class="pie-title">📉 支出构成</div><canvas id="expensePieChart" width="200" height="200"></canvas></div><div class="pie-chart-card"><div class="pie-title">📈 收入构成</div><canvas id="incomePieChart" width="200" height="200"></canvas></div></div>
+      <button class="manage-btn" id="manageRecordsBtn">📋 管理本月记录</button></div>
+    </div>
+    <div id="recordModal" class="record-modal"><div class="record-modal-content"><div style="display:flex; justify-content:space-between;"><span class="section-title">📋 本月流水记录</span><button id="closeRecordModalBtn" style="background:none; border:none; font-size:1.5rem;">✕</button></div><div id="recordListContainer"></div></div></div>
+
+    <!-- 记工时视图 -->
+    <div id="calendarView" class="view">
+      <div class="card-section">
+        <div class="section-title">📅 记工时 · 分类薪资</div>
+        <div class="month-year-picker"><select id="workYearSelect"></select> 年 <select id="workMonthSelect"></select> 月</div>
+        <div class="collapse-panel">
+          <div class="collapse-header" id="collapseHeader">⚙️ 工时分类管理 <span>▼</span></div>
+          <div class="collapse-content" id="collapseContent">
+            <div class="category-list" id="categoryList"></div>
+            <div class="add-category">
+              <input type="text" id="newCategoryName" placeholder="新分类名称">
+              <input type="number" id="newCategoryRate" placeholder="时薪" step="0.5">
+              <button class="add-btn" id="addCategoryBtn">➕ 添加</button>
+            </div>
+          </div>
+        </div>
+        <div class="pie-chart-card" style="margin-bottom: 16px;">
+          <div class="pie-title">📊 按分类工时占比（悬停看工时+收入）</div>
+          <canvas id="categoryPieChart" width="200" height="150"></canvas>
+        </div>
+        <div class="weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="add-work-card">
+          <div class="selected-date-info" id="selectedDateDisplay">请点击日历选中日期</div>
+          <div class="add-work-form">
+            <div class="form-row"><label>📂 分类</label><select id="workCategorySelect"></select></div>
+            <div class="form-row"><label>⏱️ 工时</label><input type="number" id="workHoursInput" step="0.5" placeholder="小时"></div>
+            <div class="form-row"><label>💰 时薪</label><input type="number" id="workRateInput" step="0.5" placeholder="时薪" value="19.0"></div>
+            <button class="add-btn" id="addWorkRecordBtn">➕ 添加记录</button>
           </div>
         </div>
       </div>
-      <div class="pie-chart-card" style="margin-bottom: 16px;">
-        <div class="pie-title">📊 按分类工时占比（悬停看工时+收入）</div>
-        <canvas id="categoryPieChart" width="200" height="150"></canvas>
+    </div>
+
+    <!-- 女生日历视图 -->
+    <div id="girlCalendarView" class="view"><div class="card-section"><div class="section-title">👩 女生日历 · 生理期 & 重要节日</div><div class="month-year-picker"><select id="girlYearSelect"></select> 年 <select id="girlMonthSelect"></select> 月</div><div class="girl-tabs"><div class="girl-tab active" data-girlmode="period">🌸 生理期</div><div class="girl-tab" data-girlmode="important">📅 重要节日</div></div><div id="girlPeriodPanel" class="menstrual-panel"><div class="menstrual-settings-card"><div class="setting-item"><label>🔄 周期长度</label><input type="number" id="girlCycleLength" value="28" min="21" max="40"><span>天</span></div><div class="setting-item"><label>📅 经期持续</label><input type="number" id="girlPeriodDays" value="7" min="3" max="10"><span>天</span></div><div class="setting-item"><label><input type="checkbox" id="periodReminderCheckbox"> 🔔 经期前提醒（提前2天）</label></div><button id="saveGirlMenstrualBtn" class="save-menstrual-btn">💾 保存设置</button></div><div class="weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div><div class="calendar-grid" id="girlCalendarGrid"></div><div style="margin-top:8px; font-size:0.7rem; text-align:center; color:#d46b3e;">🌸经期 💧排卵期 ⚠️症状</div></div><div id="girlImportantPanel" class="important-panel" style="display:none;"><div class="important-list-area" id="girlImportantList"></div><div class="add-important-form"><input type="text" id="girlImpTitle" placeholder="标题"><input type="date" id="girlImpDate"><label><input type="checkbox" id="girlImpRepeat"> 每年重复</label><button id="addGirlImportantBtn">➕ 添加</button></div><div class="weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div><div class="calendar-grid" id="girlImportantCalendarGrid"></div></div></div></div>
+
+    <!-- 备忘录视图 -->
+    <div id="noteView" class="view"><div class="card-section"><div class="section-title">📝 备忘录</div>
+      <div class="note-tabs">
+        <button class="note-tab active" data-tab="note">📝 笔记</button>
+        <button class="note-tab" data-tab="todo">✅ 待办事项</button>
       </div>
-      <div class="weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
-      <div class="calendar-grid" id="calendarGrid"></div>
-      <div class="add-work-card">
-        <div class="selected-date-info" id="selectedDateDisplay">请点击日历选中日期</div>
-        <div class="add-work-form">
-          <div class="form-row"><label>📂 分类</label><select id="workCategorySelect"></select></div>
-          <div class="form-row"><label>⏱️ 工时</label><input type="number" id="workHoursInput" step="0.5" placeholder="小时"></div>
-          <div class="form-row"><label>💰 时薪</label><input type="number" id="workRateInput" step="0.5" placeholder="时薪" value="19.0"></div>
-          <button class="add-btn" id="addWorkRecordBtn">➕ 添加记录</button>
+      <div id="notePanel" class="note-tab-panel active">
+        <div class="note-categories-bar" id="noteCategoriesBar"></div>
+        <div class="note-list-cards" id="noteListCards"></div>
+        <div class="note-editor-area">
+          <div class="note-header"><input type="text" id="noteTitleInput" class="note-title-input" placeholder="笔记标题"><div><button id="newNoteBtn" class="add-btn" style="padding:6px 12px;">➕ 新建</button><button id="saveNoteBtn" class="add-btn" style="padding:6px 12px;">💾 保存</button></div></div>
+          <div class="note-toolbar">
+            <button class="tool-icon" data-cmd="bold">B</button>
+            <button class="tool-icon" id="unorderedListBtn">•</button>
+            <button class="tool-icon" id="orderedListBtn">1.</button>
+            <button class="tool-icon" id="insertIconBtn">😊</button>
+            <button class="tool-icon" id="textColorBtn">🎨</button>
+            <button class="tool-icon" id="bgColorBtn">🖌️</button>
+            <button class="tool-icon" id="insertImageBtn">🖼️</button>
+            <button class="tool-icon" id="clearFormatBtn">✖️</button>
+          </div>
+          <div id="iconPicker" class="icon-picker" style="display:none;"></div>
+          <div class="note-editor" contenteditable="true" id="noteEditor"></div>
+        </div>
+      </div>
+      <div id="todoPanel" class="note-tab-panel">
+        <div class="todo-categories" id="todoCategoriesContainer"></div>
+        <div class="todo-items" id="todoItemsContainer"></div>
+        <div class="add-todo-form"><input type="text" id="newTodoText" placeholder="待办内容"><button id="addTodoBtn" class="add-btn">➕ 添加</button></div>
+        <div><button id="addCategoryBtn" class="add-cat-btn">➕ 新建分类</button></div>
+      </div>
+    </div></div>
+
+    <!-- 设置视图 -->
+    <div id="settingsView" class="view">
+      <div class="stats-section">
+        <div class="settings-group">
+          <div class="settings-group-title">📁 数据管理</div>
+          <button class="settings-btn" id="exportDataBtn">📤 导出全部数据（备份）</button>
+          <button class="settings-btn" id="importDataBtn">📥 导入数据（恢复）</button>
+          <button class="settings-btn danger-btn" id="clearAllDataBtn">⚠️ 清空所有数据（不可逆）</button>
+        </div>
+        <div class="settings-group">
+          <div class="settings-group-title">🔐 隐私保护</div>
+          <button class="settings-btn" id="togglePasswordLockBtn">🔒 设置6位数字密码锁 <span id="passwordLockStatus" class="password-status">未开启</span></button>
+          <button class="settings-btn" id="disablePasswordLockBtn">🔓 关闭密码锁</button>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- 女生日历视图 -->
-  <div id="girlCalendarView" class="view"><div class="card-section"><div class="section-title">👩 女生日历 · 生理期 & 重要节日</div><div class="month-year-picker"><select id="girlYearSelect"></select> 年 <select id="girlMonthSelect"></select> 月</div><div class="girl-tabs"><div class="girl-tab active" data-girlmode="period">🌸 生理期</div><div class="girl-tab" data-girlmode="important">📅 重要节日</div></div><div id="girlPeriodPanel" class="menstrual-panel"><div class="menstrual-settings-card"><div class="setting-item"><label>🔄 周期长度</label><input type="number" id="girlCycleLength" value="28" min="21" max="40"><span>天</span></div><div class="setting-item"><label>📅 经期持续</label><input type="number" id="girlPeriodDays" value="7" min="3" max="10"><span>天</span></div><div class="setting-item"><label><input type="checkbox" id="periodReminderCheckbox"> 🔔 经期前提醒（提前2天）</label></div><button id="saveGirlMenstrualBtn" class="save-menstrual-btn">💾 保存设置</button></div><div class="weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div><div class="calendar-grid" id="girlCalendarGrid"></div><div style="margin-top:8px; font-size:0.7rem; text-align:center; color:#d46b3e;">🌸经期 💧排卵期 ⚠️症状</div></div><div id="girlImportantPanel" class="important-panel" style="display:none;"><div class="important-list-area" id="girlImportantList"></div><div class="add-important-form"><input type="text" id="girlImpTitle" placeholder="标题"><input type="date" id="girlImpDate"><label><input type="checkbox" id="girlImpRepeat"> 每年重复</label><button id="addGirlImportantBtn">➕ 添加</button></div><div class="weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div><div class="calendar-grid" id="girlImportantCalendarGrid"></div></div></div></div>
-
-  <!-- 备忘录视图 -->
-  <div id="noteView" class="view"><div class="card-section"><div class="section-title">📝 备忘录</div>
-    <div class="note-tabs">
-      <button class="note-tab active" data-tab="note">📝 笔记</button>
-      <button class="note-tab" data-tab="todo">✅ 待办事项</button>
-    </div>
-    <div id="notePanel" class="note-tab-panel active">
-      <div class="note-categories-bar" id="noteCategoriesBar"></div>
-      <div class="note-list-cards" id="noteListCards"></div>
-      <div class="note-editor-area">
-        <div class="note-header"><input type="text" id="noteTitleInput" class="note-title-input" placeholder="笔记标题"><div><button id="newNoteBtn" class="add-btn" style="padding:6px 12px;">➕ 新建</button><button id="saveNoteBtn" class="add-btn" style="padding:6px 12px;">💾 保存</button></div></div>
-        <div class="note-toolbar">
-          <button class="tool-icon" data-cmd="bold">B</button>
-          <button class="tool-icon" id="unorderedListBtn">•</button>
-          <button class="tool-icon" id="orderedListBtn">1.</button>
-          <button class="tool-icon" id="insertIconBtn">😊</button>
-          <button class="tool-icon" id="textColorBtn">🎨</button>
-          <button class="tool-icon" id="bgColorBtn">🖌️</button>
-          <button class="tool-icon" id="insertImageBtn">🖼️</button>
-          <button class="tool-icon" id="clearFormatBtn">✖️</button>
-        </div>
-        <div id="iconPicker" class="icon-picker" style="display:none;"></div>
-        <div class="note-editor" contenteditable="true" id="noteEditor"></div>
-      </div>
-    </div>
-    <div id="todoPanel" class="note-tab-panel">
-      <div class="todo-categories" id="todoCategoriesContainer"></div>
-      <div class="todo-items" id="todoItemsContainer"></div>
-      <div class="add-todo-form"><input type="text" id="newTodoText" placeholder="待办内容"><button id="addTodoBtn" class="add-btn">➕ 添加</button></div>
-      <div><button id="addCategoryBtn" class="add-cat-btn">➕ 新建分类</button></div>
-    </div>
-  </div></div>
-
-  <!-- 设置视图 -->
-  <div id="settingsView" class="view">
-    <div class="stats-section">
-      <div class="settings-group">
-        <div class="settings-group-title">📁 数据管理</div>
-        <button class="settings-btn" id="exportDataBtn">📤 导出全部数据（备份）</button>
-        <button class="settings-btn" id="importDataBtn">📥 导入数据（恢复）</button>
-        <button class="settings-btn danger-btn" id="clearAllDataBtn">⚠️ 清空所有数据（不可逆）</button>
-      </div>
-      <div class="settings-group">
-        <div class="settings-group-title">🔐 隐私保护</div>
-        <button class="settings-btn" id="togglePasswordLockBtn">🔒 设置6位数字密码锁 <span id="passwordLockStatus" class="password-status">未开启</span></button>
-        <button class="settings-btn" id="disablePasswordLockBtn">🔓 关闭密码锁</button>
-      </div>
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+      <button class="nav-item active" data-view="bookkeeping">💰</button>
+      <button class="nav-item" data-view="calendar">📅</button>
+      <button class="nav-item" data-view="girlCalendar">👩</button>
+      <button class="nav-item" data-view="note">📝</button>
+      <button class="nav-item" data-view="settings">⚙️</button>
     </div>
   </div>
 
-  <div class="bottom-nav">
-    <button class="nav-item active" data-view="bookkeeping">💰</button>
-    <button class="nav-item" data-view="calendar">📅</button>
-    <button class="nav-item" data-view="girlCalendar">👩</button>
-    <button class="nav-item" data-view="note">📝</button>
-    <button class="nav-item" data-view="settings">⚙️</button>
-  </div>
-</div>
+  <!-- 工时记录编辑弹窗 -->
+  <div class="modal-overlay" id="dayModal"><div class="modal-sheet"><div class="modal-header" style="display:flex; justify-content:space-between; margin-bottom:12px;"><span id="modalDateTitle" style="font-weight:800;"></span><button class="close-icon" id="closeModalBtn" style="background:none; font-size:1.5rem;">✕</button></div><div id="recordsListContainer"></div><div id="editFormContainer"></div></div></div>
 
-<!-- 工时记录编辑弹窗 -->
-<div class="modal-overlay" id="dayModal"><div class="modal-sheet"><div class="modal-header" style="display:flex; justify-content:space-between; margin-bottom:12px;"><span id="modalDateTitle" style="font-weight:800;"></span><button class="close-icon" id="closeModalBtn" style="background:none; font-size:1.5rem;">✕</button></div><div id="recordsListContainer"></div><div id="editFormContainer"></div></div></div>
+  <script>
+    (function(){
+      // 存储KEY
+      const STORAGE_KEY = 'dopa_work_v17';
+      const BK_STORAGE_KEY = 'dopa_bookkeeping_v8';
+      const NOTE_STORAGE_KEY = 'dopa_note_v5';
+      const TODO_STORAGE_KEY = 'dopa_todo_v2';
+      const PASSWORD_KEY = 'dopa_password';
+      const PASSWORD_ENABLED_KEY = 'dopa_password_enabled';
+      const PERIOD_STORAGE_KEY = 'dopa_period_v1';
+      const IMPORTANT_STORAGE_KEY = 'dopa_important_v1';
+      const THEME_KEY = 'dopa_theme';
+      const REMINDER_ENABLED_KEY = 'dopa_reminder_enabled';
+      const WORK_CATEGORIES_KEY = 'work_categories_v1';
 
-<script>
-  (function(){
-    // 存储KEY
-    const STORAGE_KEY = 'dopa_work_v17';
-    const BK_STORAGE_KEY = 'dopa_bookkeeping_v8';
-    const NOTE_STORAGE_KEY = 'dopa_note_v5';
-    const TODO_STORAGE_KEY = 'dopa_todo_v2';
-    const PASSWORD_KEY = 'dopa_password';
-    const PASSWORD_ENABLED_KEY = 'dopa_password_enabled';
-    const PERIOD_STORAGE_KEY = 'dopa_period_v1';
-    const IMPORTANT_STORAGE_KEY = 'dopa_important_v1';
-    const THEME_KEY = 'dopa_theme';
-    const REMINDER_ENABLED_KEY = 'dopa_reminder_enabled';
-    const WORK_CATEGORIES_KEY = 'work_categories_v1';
+      let workCategories = [];
+      let records = {};
+      let bkRecords = [];
+      let todoCategories = ['工作','生活','学习','购物'];
+      let todos = [];
+      let menstrualData = {};
+      let importantDays = [];
+      let cycleLength = 28, periodDays = 7, reminderEnabled = false;
+      let noteCategories = ['个人', '工作', '灵感'];
+      let notes = [];
+      let currentNoteId = null, currentNoteCategoryId = '个人', currentTodoCat = '工作';
 
-    let workCategories = [];
-    let records = {};
-    let bkRecords = [];
-    let todoCategories = ['工作','生活','学习','购物'];
-    let todos = [];
-    let menstrualData = {};
-    let importantDays = [];
-    let cycleLength = 28, periodDays = 7, reminderEnabled = false;
-    let noteCategories = ['个人', '工作', '灵感'];
-    let notes = [];
-    let currentNoteId = null, currentNoteCategoryId = '个人', currentTodoCat = '工作';
+      let currentYear = new Date().getFullYear(), currentMonth = new Date().getMonth();
+      let selectedDateStr = '', editingRecordId = null;
+      let passwordEnabled = false, savedPassword = '', isUnlocked = true;
+      let currentBkYear = new Date().getFullYear(), currentBkMonth = new Date().getMonth(), currentBkType = 'expense', currentBkCategory = '';
+      let workDisplayYear = currentYear, workDisplayMonth = currentMonth;
+      let girlDisplayYear = currentYear, girlDisplayMonth = currentMonth, girlCurrentMode = 'period';
+      let expenseChart, incomeChart, categoryChart;
+      let currentSelectedWorkDate = null;
 
-    let currentYear = new Date().getFullYear(), currentMonth = new Date().getMonth();
-    let selectedDateStr = '', editingRecordId = null;
-    let passwordEnabled = false, savedPassword = '', isUnlocked = true;
-    let currentBkYear = new Date().getFullYear(), currentBkMonth = new Date().getMonth(), currentBkType = 'expense', currentBkCategory = '';
-    let workDisplayYear = currentYear, workDisplayMonth = currentMonth;
-    let girlDisplayYear = currentYear, girlDisplayMonth = currentMonth, girlCurrentMode = 'period';
-    let expenseChart, incomeChart, categoryChart;
-    let currentSelectedWorkDate = null;
-
-    function haptic() {
-      if (window.navigator && window.navigator.vibrate) {
-        window.navigator.vibrate(10);
-      }
-    }
-
-    function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>]/g, m=> m==='&'?'&amp;':m==='<'?'&lt;':'>'); }
-    function formatDateKey(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
-    function getDaysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
-    function getFirstDayIndex(y,m){ let d=new Date(y,m,1).getDay(); return d===0?7:d; }
-    function getDaySummary(key){ let h=0,inc=0; (records[key]||[]).forEach(r=>{ h+=r.hours||0; inc+=r.income||0; }); return {hours:h,income:inc}; }
-    function saveToLocal(key,data){ localStorage.setItem(key, JSON.stringify(data)); }
-    function loadFromLocal(key,def){ const s=localStorage.getItem(key); return s?JSON.parse(s):def; }
-
-    function loadAll(){
-      workCategories = loadFromLocal(WORK_CATEGORIES_KEY, []);
-      if(workCategories.length === 0){
-        workCategories = [
-          { id: 'cat1', name: '达美乐', hourlyRate: 19 },
-          { id: 'cat2', name: '美团', hourlyRate: 19 }
-        ];
-      }
-      records = loadFromLocal(STORAGE_KEY, {});
-      bkRecords = loadFromLocal(BK_STORAGE_KEY, []);
-      const rawNote = loadFromLocal(NOTE_STORAGE_KEY, null);
-      if(rawNote && rawNote.categories && Array.isArray(rawNote.notes)){
-        noteCategories = rawNote.categories;
-        notes = rawNote.notes;
-      } else {
-        notes = [];
-        saveToLocal(NOTE_STORAGE_KEY, { categories: noteCategories, notes });
-      }
-      currentNoteId = notes.length > 0 ? notes[0].id : null;
-      currentNoteCategoryId = noteCategories[0];
-      const todoData = loadFromLocal(TODO_STORAGE_KEY, { categories: ['工作','生活','学习','购物'], todos: [] });
-      todoCategories = todoData.categories;
-      todos = todoData.todos;
-      const periodData = loadFromLocal(PERIOD_STORAGE_KEY, { menstrualData: {}, cycleLength: 28, periodDays: 7 });
-      menstrualData = periodData.menstrualData;
-      cycleLength = periodData.cycleLength;
-      periodDays = periodData.periodDays;
-      importantDays = loadFromLocal(IMPORTANT_STORAGE_KEY, []);
-      passwordEnabled = localStorage.getItem(PASSWORD_ENABLED_KEY)==='true';
-      savedPassword = localStorage.getItem(PASSWORD_KEY)||'';
-      isUnlocked = !passwordEnabled;
-      reminderEnabled = localStorage.getItem(REMINDER_ENABLED_KEY) === 'true';
-      currentTodoCat = todoCategories[0] || '工作';
-      const savedTheme = localStorage.getItem(THEME_KEY) || 'default';
-      document.body.classList.remove('theme-mint', 'theme-sky');
-      if(savedTheme === 'mint') document.body.classList.add('theme-mint');
-      else if(savedTheme === 'sky') document.body.classList.add('theme-sky');
-    }
-    function saveAll(){
-      saveToLocal(WORK_CATEGORIES_KEY, workCategories);
-      saveToLocal(STORAGE_KEY, records);
-      saveToLocal(BK_STORAGE_KEY, bkRecords);
-      saveToLocal(NOTE_STORAGE_KEY, { categories: noteCategories, notes });
-      saveToLocal(TODO_STORAGE_KEY, { categories: todoCategories, todos });
-      saveToLocal(PERIOD_STORAGE_KEY, { menstrualData, cycleLength, periodDays });
-      saveToLocal(IMPORTANT_STORAGE_KEY, importantDays);
-      localStorage.setItem(PASSWORD_ENABLED_KEY, passwordEnabled);
-      localStorage.setItem(PASSWORD_KEY, savedPassword);
-      localStorage.setItem(REMINDER_ENABLED_KEY, reminderEnabled);
-    }
-
-    function updatePasswordLockStatus() {
-      const statusSpan = document.getElementById('passwordLockStatus');
-      if(statusSpan) statusSpan.textContent = passwordEnabled ? '已开启' : '未开启';
-    }
-
-    // ========== 记账模块 ==========
-    const expenseCategories = ['餐饮','日用','交通','通讯','购物','娱乐','医疗','其他'];
-    const incomeCategories = ['工资','兼职','红包','理财','奖金','其他'];
-    function renderBkCategoryGrid(){
-      const cats = currentBkType==='expense'?expenseCategories:incomeCategories;
-      document.getElementById('bkCategoryGrid').innerHTML = cats.map(cat => `<div class="cat-icon ${currentBkCategory===cat?'active':''}" data-category="${cat}">${cat}</div>`).join('');
-      document.querySelectorAll('#bkCategoryGrid .cat-icon').forEach(el=>el.addEventListener('click',()=>{
-        document.querySelectorAll('#bkCategoryGrid .cat-icon').forEach(c=>c.classList.remove('active'));
-        el.classList.add('active');
-        currentBkCategory = el.dataset.category;
-        haptic();
-      }));
-      if(!currentBkCategory && cats.length) currentBkCategory = cats[0];
-      const first = document.querySelector('#bkCategoryGrid .cat-icon');
-      if(first) first.classList.add('active');
-    }
-    function refreshBookkeepingUI(){
-      const recs = bkRecords.filter(r=>{let d=new Date(r.date); return d.getFullYear()===currentBkYear && d.getMonth()===currentBkMonth;});
-      let inc=0,exp=0,incMap=new Map(),expMap=new Map();
-      recs.forEach(r=>{
-        if(r.type==='income'){ inc+=r.amount; incMap.set(r.category,(incMap.get(r.category)||0)+r.amount); }
-        else { exp+=r.amount; expMap.set(r.category,(expMap.get(r.category)||0)+r.amount); }
-      });
-      document.getElementById('monthIncomeBk').innerText=inc.toFixed(2);
-      document.getElementById('monthExpenseBk').innerText=exp.toFixed(2);
-      document.getElementById('monthBalanceBk').innerText=(inc-exp).toFixed(2);
-      if(expenseChart) expenseChart.destroy();
-      if(incomeChart) incomeChart.destroy();
-      const totalExp = exp;
-      expenseChart = new Chart(document.getElementById('expensePieChart'),{
-        type:'pie',
-        data:{ labels:Array.from(expMap.keys()), datasets:[{ data:Array.from(expMap.values()), backgroundColor:['#FFB3BA','#C5E99B','#B5E3FF','#FFD6A5','#D4B8D4','#A7E0E0','#FBC8B5','#C9C9C9'] }] },
-        options:{
-          plugins:{ legend:{ display: false }, tooltip:{ callbacks:{ label: (ctx) => { const label = ctx.label || ''; const value = ctx.raw; const percent = totalExp > 0 ? ((value / totalExp) * 100).toFixed(1) : 0; return `${label}: ¥${value.toFixed(2)} (${percent}%)`; } } } },
-          onClick:(e,active)=>{ if(active.length){ const idx=active[0].index; const label=expenseChart.data.labels[idx]; const val=expenseChart.data.datasets[0].data[idx]; const percent = totalExp>0 ? ((val/totalExp)*100).toFixed(1) : 0; alert(`${label}：¥${val.toFixed(2)}，占总支出的 ${percent}%`); } }
+      function haptic() {
+        if (window.navigator && window.navigator.vibrate) {
+          window.navigator.vibrate(10);
         }
-      });
-      const totalInc = inc;
-      incomeChart = new Chart(document.getElementById('incomePieChart'),{
-        type:'pie',
-        data:{ labels:Array.from(incMap.keys()), datasets:[{ data:Array.from(incMap.values()), backgroundColor:['#9AD0F5','#C5E99B','#FFD966','#F4ACB7','#FFB347','#B0A8B9'] }] },
-        options:{
-          plugins:{ legend:{ display: false }, tooltip:{ callbacks:{ label: (ctx) => { const label = ctx.label || ''; const value = ctx.raw; const percent = totalInc > 0 ? ((value / totalInc) * 100).toFixed(1) : 0; return `${label}: ¥${value.toFixed(2)} (${percent}%)`; } } } },
-          onClick:(e,active)=>{ if(active.length){ const idx=active[0].index; const label=incomeChart.data.labels[idx]; const val=incomeChart.data.datasets[0].data[idx]; const percent = totalInc>0 ? ((val/totalInc)*100).toFixed(1) : 0; alert(`${label}：¥${val.toFixed(2)}，占收入的 ${percent}%`); } }
-        }
-      });
-    }
-    function addBookkeeping(){ if(!currentBkCategory){ alert('请选择分类'); return; } let amount=parseFloat(document.getElementById('bkAmount').value); if(isNaN(amount)||amount<=0) return; bkRecords.push({id:Date.now(),type:currentBkType,category:currentBkCategory,amount,date:new Date().toISOString().slice(0,10),note:document.getElementById('bkNote').value.trim()}); saveAll(); refreshBookkeepingUI(); document.getElementById('bkAmount').value=''; document.getElementById('bkNote').value=''; haptic(); }
-    function changeBkMonth(delta){ let nm=currentBkMonth+delta, ny=currentBkYear; if(nm<0){ nm=11; ny--; } if(nm>11){ nm=0; ny++; } currentBkYear=ny; currentBkMonth=nm; document.getElementById('currentMonthBk').innerText=`${currentBkYear}年 ${currentBkMonth+1}月`; refreshBookkeepingUI(); }
-    function showRecordModal(){ const recs=bkRecords.filter(r=>{let d=new Date(r.date); return d.getFullYear()===currentBkYear && d.getMonth()===currentBkMonth;}); if(!recs.length){ alert('本月无记录'); return; } document.getElementById('recordListContainer').innerHTML=recs.map(r=>`<div class="modal-record-item"><div><strong>${r.type==='income'?'💰收入':'💸支出'}</strong> ${r.category} ${r.note?`· ${escapeHtml(r.note)}`:''}<br>${r.date} ¥${r.amount.toFixed(2)}</div><div><button class="delete-record" data-id="${r.id}">🗑️</button></div></div>`).join(''); document.querySelectorAll('.delete-record').forEach(btn=>btn.addEventListener('click',()=>{ bkRecords=bkRecords.filter(r=>r.id!=btn.dataset.id); saveAll(); refreshBookkeepingUI(); showRecordModal(); })); document.getElementById('recordModal').classList.add('show'); }
+      }
 
-    // ========== 工时模块 ==========
-    function renderCategoryList(){
-      const container = document.getElementById('categoryList');
-      container.innerHTML = workCategories.map(cat => `
-        <div class="category-item">
-          <span class="category-name">${escapeHtml(cat.name)}</span>
-          <input type="number" class="category-rate" data-id="${cat.id}" value="${cat.hourlyRate}" step="0.5">
-          <div class="category-actions"><button class="save-category" data-id="${cat.id}">💾</button><button class="delete-category" data-id="${cat.id}">🗑️</button></div>
-        </div>
-      `).join('');
-      document.querySelectorAll('.save-category').forEach(btn=>btn.addEventListener('click',()=>{ const id=btn.dataset.id; const rateInput=btn.closest('.category-item').querySelector('.category-rate'); const newRate=parseFloat(rateInput.value); if(!isNaN(newRate)&&newRate>0){ const cat=workCategories.find(c=>c.id===id); if(cat) cat.hourlyRate=newRate; saveAll(); renderCategorySelect(); renderWorkStatsAndChart(); } }));
-      document.querySelectorAll('.delete-category').forEach(btn=>btn.addEventListener('click',()=>{ const id=btn.dataset.id; if(confirm('删除分类后，相关工时记录将变为“未分类”，确定删除？')){ workCategories=workCategories.filter(c=>c.id!==id); for(let key in records){ records[key]=records[key].map(r=>{ if(r.categoryId===id) return {...r, categoryId: null}; return r; }); } saveAll(); renderCategoryList(); renderCategorySelect(); renderWorkCalendar(); renderWorkStatsAndChart(); } }));
-    }
-    function renderCategorySelect(){
-      const select = document.getElementById('workCategorySelect');
-      select.innerHTML = '<option value="">-- 选择分类 --</option>' + workCategories.map(cat => `<option value="${cat.id}" data-rate="${cat.hourlyRate}">${escapeHtml(cat.name)} (¥${cat.hourlyRate}/h)</option>`).join('');
-      select.onchange = () => { const selected = select.options[select.selectedIndex]; const rate = selected.getAttribute('data-rate'); if(rate) document.getElementById('workRateInput').value = rate; };
-    }
-    function addNewCategory(){
-      const name = document.getElementById('newCategoryName').value.trim();
-      const rate = parseFloat(document.getElementById('newCategoryRate').value);
-      if(!name || isNaN(rate) || rate<=0){ alert('请输入有效的分类名称和时薪'); return; }
-      workCategories.push({ id: 'cat_'+Date.now(), name, hourlyRate: rate });
-      saveAll(); renderCategoryList(); renderCategorySelect();
-      document.getElementById('newCategoryName').value = ''; document.getElementById('newCategoryRate').value = '';
-      haptic();
-    }
-    function renderWorkStatsAndChart(){
-      const y=workDisplayYear, m=workDisplayMonth;
-      const daysInMonth = getDaysInMonth(y,m);
-      let categoryHours = new Map(), categoryIncome = new Map(), totalHours = 0;
-      for(let d=1; d<=daysInMonth; d++){
-        const key = formatDateKey(y,m,d);
-        (records[key]||[]).forEach(r=>{
-          totalHours += r.hours;
-          const catId = r.categoryId;
-          if(catId){
-            categoryHours.set(catId, (categoryHours.get(catId)||0) + r.hours);
-            categoryIncome.set(catId, (categoryIncome.get(catId)||0) + r.income);
-          } else {
-            categoryHours.set('unknown', (categoryHours.get('unknown')||0) + r.hours);
-            categoryIncome.set('unknown', (categoryIncome.get('unknown')||0) + r.income);
-          }
-        });
-      }
-      const labels = [], data = [];
-      for(let [id, hours] of categoryHours.entries()){
-        let label = id === 'unknown' ? '未分类' : (workCategories.find(c=>c.id===id)?.name || id);
-        labels.push(label);
-        data.push(hours);
-      }
-      if(categoryChart) categoryChart.destroy();
-      const ctx = document.getElementById('categoryPieChart').getContext('2d');
-      if(totalHours === 0){
-        categoryChart = new Chart(ctx, { type:'pie', data:{ labels:['暂无数据'], datasets:[{ data:[1], backgroundColor:['#ccc'] }] }, options:{ plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:()=>'无工时记录' } } } } });
-      } else {
-        const incomeMap = new Map();
-        for(let [id, inc] of categoryIncome.entries()){
-          let label = id === 'unknown' ? '未分类' : (workCategories.find(c=>c.id===id)?.name || id);
-          incomeMap.set(label, inc);
-        }
-        categoryChart = new Chart(ctx, { type:'pie', data:{ labels, datasets:[{ data, backgroundColor:['#FFB3BA','#C5E99B','#B5E3FF','#FFD6A5','#D4B8D4','#A7E0E0','#FBC8B5','#C9C9C9'] }] }, options:{ plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label: (ctx) => { const label = ctx.label || ''; const hours = ctx.raw; const percent = ((hours / totalHours) * 100).toFixed(1); const income = incomeMap.get(label) || 0; return `${label}: ${hours.toFixed(1)}小时 (${percent}%)，收入：¥${income.toFixed(2)}`; } } } } } });
-      }
-    }
-    function renderWorkCalendar(){
-      const y=workDisplayYear, m=workDisplayMonth;
-      const first = getFirstDayIndex(y,m), dim = getDaysInMonth(y,m);
-      let cells = [];
-      for(let i=1; i<first; i++) cells.push(`<div class="day-cell empty"><div class="day-number"></div></div>`);
-      for(let d=1; d<=dim; d++) cells.push(buildWorkCell(y,m,d));
-      const totalCells=42, rem = totalCells - cells.length;
-      for(let i=0;i<rem;i++) cells.push(`<div class="day-cell empty"><div class="day-number"></div></div>`);
-      document.getElementById('calendarGrid').innerHTML = cells.join('');
-      document.querySelectorAll('#calendarGrid .day-cell:not(.empty)').forEach(cell=>{
-        cell.addEventListener('click',()=>{
-          const dateKey = cell.dataset.date;
-          if(dateKey){
-            document.querySelectorAll('#calendarGrid .day-cell').forEach(c=>c.classList.remove('selected'));
-            cell.classList.add('selected');
-            currentSelectedWorkDate = dateKey;
-            document.getElementById('selectedDateDisplay').innerHTML = `📅 已选中日期：${dateKey}`;
-            haptic();
-          }
-        });
-      });
-      renderWorkStatsAndChart();
-    }
-    function buildWorkCell(y,m,d){
-      const key=formatDateKey(y,m,d); const sum=getDaySummary(key); const today=new Date(); const isToday=(y===today.getFullYear() && m===today.getMonth() && d===today.getDate());
-      const cls = `day-cell ${isToday?'today':''}`;
-      let bottom = (sum.hours>0||sum.income>0)?`<div class="day-hours">${sum.hours.toFixed(1)}h</div><div class="day-income">¥${sum.income.toFixed(0)}</div>`:`<div class="empty-indicator">✨</div>`;
-      return `<div class="${cls}" data-date="${key}"><div class="day-number">${d}</div>${bottom}</div>`;
-    }
-    function addWorkRecordFromForm(){
-      if(!currentSelectedWorkDate){ alert('请先点击日历格子选择日期'); return; }
-      const categoryId = document.getElementById('workCategorySelect').value;
-      if(!categoryId){ alert('请选择分类'); return; }
-      const hours = parseFloat(document.getElementById('workHoursInput').value);
-      let rate = parseFloat(document.getElementById('workRateInput').value);
-      if(isNaN(hours)||hours<=0){ alert('请输入有效的工时'); return; }
-      if(isNaN(rate)||rate<=0){ alert('请输入有效的时薪'); return; }
-      const key = currentSelectedWorkDate;
-      const newRecord = { id: Date.now()+''+Math.random(), categoryId, hours, rate, income: hours*rate };
-      let arr = records[key] || [];
-      arr.push(newRecord);
-      records[key] = arr;
-      saveAll();
-      renderWorkCalendar();
-      document.getElementById('workHoursInput').value = '';
-      haptic();
-    }
-    function openModal(key){
-      selectedDateStr=key; const d=new Date(key);
-      document.getElementById('modalDateTitle').textContent = `${d.getMonth()+1}月${d.getDate()}日 工时明细`;
-      renderRecordsInModal();
-      document.getElementById('dayModal').classList.add('show');
-    }
-    function renderRecordsInModal(){
-      const arr = records[selectedDateStr]||[];
-      const container = document.getElementById('recordsListContainer');
-      if(!arr.length){ container.innerHTML='<div style="padding:16px; text-align:center;">✨ 暂无记录</div>'; return; }
-      container.innerHTML = arr.map(r => { const catName = workCategories.find(c=>c.id===r.categoryId)?.name || '未知分类'; return `<div class="record-item"><span><strong>${catName}</strong> ${r.hours}h @ ¥${r.rate}/h</span><span>¥${r.income.toFixed(2)}</span><div><button class="edit-btn" data-id="${r.id}">✎</button><button class="delete-btn" data-id="${r.id}">🗑</button></div></div>`; }).join('');
-      document.querySelectorAll('.edit-btn').forEach(b=>b.addEventListener('click',()=>startEdit(b.dataset.id)));
-      document.querySelectorAll('.delete-btn').forEach(b=>b.addEventListener('click',()=>{ let arr2=records[selectedDateStr]||[]; arr2=arr2.filter(r=>r.id!=b.dataset.id); if(arr2.length) records[selectedDateStr]=arr2; else delete records[selectedDateStr]; saveAll(); renderRecordsInModal(); renderWorkCalendar(); }));
-    }
-    function startEdit(id){ const rec=(records[selectedDateStr]||[]).find(r=>r.id==id); if(rec){ editingRecordId=id; showEditForm(rec); } }
-    function hideEditForm(){ document.getElementById('editFormContainer').style.display='none'; editingRecordId=null; }
-    function showEditForm(init){
-      const catOptions = workCategories.map(c=>`<option value="${c.id}" ${init.categoryId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
-      const formHtml = `<div class="edit-form"><select id="editCategory">${catOptions}</select><input id="editHours" type="number" step="0.1" placeholder="工时" value="${init.hours||''}"><input id="editRate" type="number" step="0.1" placeholder="时薪" value="${init.rate||''}"><div style="display:flex; gap:12px; margin-top:12px;"><button id="saveEditBtn" class="add-btn" style="flex:1;">保存</button><button id="cancelEditBtn" class="add-btn" style="background:#ffc2a1; flex:1;">取消</button></div></div>`;
-      const container = document.getElementById('editFormContainer');
-      container.innerHTML = formHtml; container.style.display = 'block';
-      document.getElementById('cancelEditBtn').onclick = hideEditForm;
-      document.getElementById('saveEditBtn').onclick = ()=>{
-        const categoryId = document.getElementById('editCategory').value;
-        const hours = parseFloat(document.getElementById('editHours').value);
-        const rate = parseFloat(document.getElementById('editRate').value);
-        if(isNaN(hours)||hours<=0){ alert('有效工时'); return; }
-        if(isNaN(rate)||rate<=0){ alert('有效时薪'); return; }
-        const updated = { id: editingRecordId, categoryId, hours, rate, income: hours*rate };
-        let arr = records[selectedDateStr]||[];
-        arr = arr.map(r=>r.id==editingRecordId?updated:r);
-        records[selectedDateStr] = arr;
-        saveAll(); renderRecordsInModal(); renderWorkCalendar(); hideEditForm();
-        haptic();
-      };
-    }
-    function closeModal(){ document.getElementById('dayModal').classList.remove('show'); hideEditForm(); }
+      function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>]/g, m=> m==='&'?'&amp;':m==='<'?'&lt;':'>'); }
+      function formatDateKey(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+      function getDaysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
+      function getFirstDayIndex(y,m){ let d=new Date(y,m,1).getDay(); return d===0?7:d; }
+      function getDaySummary(key){ let h=0,inc=0; (records[key]||[]).forEach(r=>{ h+=r.hours||0; inc+=r.income||0; }); return {hours:h,income:inc}; }
+      function saveToLocal(key,data){ localStorage.setItem(key, JSON.stringify(data)); }
+      function loadFromLocal(key,def){ const s=localStorage.getItem(key); return s?JSON.parse(s):def; }
 
-    // ========== 女生日历完整实现 ==========
-    const lunarInfo = [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04bd7,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0];
-    function getLunarYearInfo(year){ return lunarInfo[year-1900]; }
-    function getLunarMonthDays(year, month){ let bit = 0x10000 >> month; return (getLunarYearInfo(year) & bit) ? 30 : 29; }
-    function getLunarLeapMonth(year){ return getLunarYearInfo(year) & 0xf; }
-    function solarToLunar(y,m,d){
-      let baseDate = new Date(1900,0,31);
-      let target = new Date(y,m-1,d);
-      let offset = Math.floor((target - baseDate)/86400000);
-      let year = 1900, month, day, isLeap=false;
-      while(offset>0){
-        let daysOfYear = 0;
-        for(let i=1;i<=12;i++){
-          let days = getLunarMonthDays(year,i);
-          if(i===getLunarLeapMonth(year)) days = getLunarMonthDays(year,i+1);
-          daysOfYear += days;
+      function loadAll(){
+        workCategories = loadFromLocal(WORK_CATEGORIES_KEY, []);
+        if(workCategories.length === 0){
+          workCategories = [
+            { id: 'cat1', name: '达美乐', hourlyRate: 19 },
+            { id: 'cat2', name: '美团', hourlyRate: 19 }
+          ];
         }
-        if(offset>=daysOfYear){ offset-=daysOfYear; year++; continue; }
-        let leap = getLunarLeapMonth(year);
-        for(let i=1;i<=12;i++){
-          let days = getLunarMonthDays(year,i);
-          if(i===leap){ 
-            let leapDays = getLunarMonthDays(year,i+1);
-            if(offset<leapDays){ month=i; day=offset+1; isLeap=true; break; }
-            offset-=leapDays;
-          }
-          if(offset<days){ month=i; day=offset+1; isLeap=false; break; }
-          offset-=days;
-        }
-        break;
-      }
-      return { year, month, day, isLeap };
-    }
-    function getShortLunarDayString(y,m,d){
-      const lunar = solarToLunar(y,m,d);
-      const arr = ['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
-      return arr[lunar.day-1] || '三十';
-    }
-    const festivals = {"0101":"元旦","0214":"情人节","0308":"妇女节","0501":"劳动节","1001":"国庆节","lunar-0101":"春节","lunar-0115":"元宵节","lunar-0505":"端午节","lunar-0815":"中秋节"};
-    function getFestival(y,m,d){
-      const mmdd = `${String(m).padStart(2,'0')}${String(d).padStart(2,'0')}`;
-      if(festivals[mmdd]) return festivals[mmdd];
-      const lunar = solarToLunar(y,m,d);
-      const key = `lunar-${String(lunar.month).padStart(2,'0')}${String(lunar.day).padStart(2,'0')}`;
-      return festivals[key] || null;
-    }
-    function getLunarOrFestivalShort(y,m,d){
-      const fest = getFestival(y,m,d);
-      if(fest) return fest;
-      return getShortLunarDayString(y,m,d);
-    }
-    function getOvulationDates(){
-      const dates = Object.keys(menstrualData).filter(k=>menstrualData[k]?.isPeriod).sort();
-      if(!dates.length) return new Set();
-      let last = dates[dates.length-1];
-      let start = new Date(last);
-      let nextPeriod = new Date(start);
-      nextPeriod.setDate(start.getDate()+cycleLength);
-      let ovulation = new Date(nextPeriod);
-      ovulation.setDate(nextPeriod.getDate()-14);
-      let set = new Set();
-      for(let i=-2;i<=2;i++){ let day=new Date(ovulation); day.setDate(ovulation.getDate()+i); set.add(formatDateKey(day.getFullYear(),day.getMonth(),day.getDate())); }
-      return set;
-    }
-    function buildGirlCell(y,m,d,isPlaceholder){
-      const key = formatDateKey(y,m,d);
-      const today = new Date();
-      const isToday = (y===today.getFullYear() && m===today.getMonth() && d===today.getDate());
-      let cls = `day-cell ${isToday?'today':''}`;
-      if(isPlaceholder) cls += ' empty';
-      let bottomHtml = '';
-      if(!isPlaceholder){
-        if(girlCurrentMode === 'period'){
-          const info = menstrualData[key];
-          const ovu = getOvulationDates();
-          let icons = [];
-          if(info?.isPeriod) icons.push('🌸');
-          if(info?.symptoms?.length) icons.push('⚠️');
-          if(ovu.has(key)) icons.push('💧');
-          bottomHtml = icons.length ? `<div class="day-badge">${icons.map(i=>`<span style="font-size:0.8rem;">${i}</span>`).join('')}</div>` : `<div class="empty-indicator">✨</div>`;
+        records = loadFromLocal(STORAGE_KEY, {});
+        bkRecords = loadFromLocal(BK_STORAGE_KEY, []);
+        const rawNote = loadFromLocal(NOTE_STORAGE_KEY, null);
+        if(rawNote && rawNote.categories && Array.isArray(rawNote.notes)){
+          noteCategories = rawNote.categories;
+          notes = rawNote.notes;
         } else {
-          const text = getLunarOrFestivalShort(y, m+1, d);
-          bottomHtml = `<div class="lunar-text">${text}</div>`;
+          notes = [];
+          saveToLocal(NOTE_STORAGE_KEY, { categories: noteCategories, notes });
+        }
+        currentNoteId = notes.length > 0 ? notes[0].id : null;
+        currentNoteCategoryId = noteCategories[0];
+        const todoData = loadFromLocal(TODO_STORAGE_KEY, { categories: ['工作','生活','学习','购物'], todos: [] });
+        todoCategories = todoData.categories;
+        todos = todoData.todos;
+        const periodData = loadFromLocal(PERIOD_STORAGE_KEY, { menstrualData: {}, cycleLength: 28, periodDays: 7 });
+        menstrualData = periodData.menstrualData;
+        cycleLength = periodData.cycleLength;
+        periodDays = periodData.periodDays;
+        importantDays = loadFromLocal(IMPORTANT_STORAGE_KEY, []);
+        passwordEnabled = localStorage.getItem(PASSWORD_ENABLED_KEY)==='true';
+        savedPassword = localStorage.getItem(PASSWORD_KEY)||'';
+        isUnlocked = !passwordEnabled;
+        reminderEnabled = localStorage.getItem(REMINDER_ENABLED_KEY) === 'true';
+        currentTodoCat = todoCategories[0] || '工作';
+        const savedTheme = localStorage.getItem(THEME_KEY) || 'default';
+        document.body.classList.remove('theme-mint', 'theme-sky');
+        if(savedTheme === 'mint') document.body.classList.add('theme-mint');
+        else if(savedTheme === 'sky') document.body.classList.add('theme-sky');
+      }
+      function saveAll(){
+        saveToLocal(WORK_CATEGORIES_KEY, workCategories);
+        saveToLocal(STORAGE_KEY, records);
+        saveToLocal(BK_STORAGE_KEY, bkRecords);
+        saveToLocal(NOTE_STORAGE_KEY, { categories: noteCategories, notes });
+        saveToLocal(TODO_STORAGE_KEY, { categories: todoCategories, todos });
+        saveToLocal(PERIOD_STORAGE_KEY, { menstrualData, cycleLength, periodDays });
+        saveToLocal(IMPORTANT_STORAGE_KEY, importantDays);
+        localStorage.setItem(PASSWORD_ENABLED_KEY, passwordEnabled);
+        localStorage.setItem(PASSWORD_KEY, savedPassword);
+        localStorage.setItem(REMINDER_ENABLED_KEY, reminderEnabled);
+      }
+
+      function updatePasswordLockStatus() {
+        const statusSpan = document.getElementById('passwordLockStatus');
+        if(statusSpan) statusSpan.textContent = passwordEnabled ? '已开启' : '未开启';
+      }
+
+      // ========== 记账模块 ==========
+      const expenseCategories = ['餐饮','日用','交通','通讯','购物','娱乐','医疗','其他'];
+      const incomeCategories = ['工资','兼职','红包','理财','奖金','其他'];
+      function renderBkCategoryGrid(){
+        const cats = currentBkType==='expense'?expenseCategories:incomeCategories;
+        document.getElementById('bkCategoryGrid').innerHTML = cats.map(cat => `<div class="cat-icon ${currentBkCategory===cat?'active':''}" data-category="${cat}">${cat}</div>`).join('');
+        document.querySelectorAll('#bkCategoryGrid .cat-icon').forEach(el=>el.addEventListener('click',()=>{
+          document.querySelectorAll('#bkCategoryGrid .cat-icon').forEach(c=>c.classList.remove('active'));
+          el.classList.add('active');
+          currentBkCategory = el.dataset.category;
+          haptic();
+        }));
+        if(!currentBkCategory && cats.length) currentBkCategory = cats[0];
+        const first = document.querySelector('#bkCategoryGrid .cat-icon');
+        if(first) first.classList.add('active');
+      }
+      function refreshBookkeepingUI(){
+        const recs = bkRecords.filter(r=>{let d=new Date(r.date); return d.getFullYear()===currentBkYear && d.getMonth()===currentBkMonth;});
+        let inc=0,exp=0,incMap=new Map(),expMap=new Map();
+        recs.forEach(r=>{
+          if(r.type==='income'){ inc+=r.amount; incMap.set(r.category,(incMap.get(r.category)||0)+r.amount); }
+          else { exp+=r.amount; expMap.set(r.category,(expMap.get(r.category)||0)+r.amount); }
+        });
+        document.getElementById('monthIncomeBk').innerText=inc.toFixed(2);
+        document.getElementById('monthExpenseBk').innerText=exp.toFixed(2);
+        document.getElementById('monthBalanceBk').innerText=(inc-exp).toFixed(2);
+        if(expenseChart) expenseChart.destroy();
+        if(incomeChart) incomeChart.destroy();
+        const totalExp = exp;
+        expenseChart = new Chart(document.getElementById('expensePieChart'),{
+          type:'pie',
+          data:{ labels:Array.from(expMap.keys()), datasets:[{ data:Array.from(expMap.values()), backgroundColor:['#FFB3BA','#C5E99B','#B5E3FF','#FFD6A5','#D4B8D4','#A7E0E0','#FBC8B5','#C9C9C9'] }] },
+          options:{
+            plugins:{ legend:{ display: false }, tooltip:{ callbacks:{ label: (ctx) => { const label = ctx.label || ''; const value = ctx.raw; const percent = totalExp > 0 ? ((value / totalExp) * 100).toFixed(1) : 0; return `${label}: ¥${value.toFixed(2)} (${percent}%)`; } } } },
+            onClick:(e,active)=>{ if(active.length){ const idx=active[0].index; const label=expenseChart.data.labels[idx]; const val=expenseChart.data.datasets[0].data[idx]; const percent = totalExp>0 ? ((val/totalExp)*100).toFixed(1) : 0; alert(`${label}：¥${val.toFixed(2)}，占总支出的 ${percent}%`); } }
+          }
+        });
+        const totalInc = inc;
+        incomeChart = new Chart(document.getElementById('incomePieChart'),{
+          type:'pie',
+          data:{ labels:Array.from(incMap.keys()), datasets:[{ data:Array.from(incMap.values()), backgroundColor:['#9AD0F5','#C5E99B','#FFD966','#F4ACB7','#FFB347','#B0A8B9'] }] },
+          options:{
+            plugins:{ legend:{ display: false }, tooltip:{ callbacks:{ label: (ctx) => { const label = ctx.label || ''; const value = ctx.raw; const percent = totalInc > 0 ? ((value / totalInc) * 100).toFixed(1) : 0; return `${label}: ¥${value.toFixed(2)} (${percent}%)`; } } } },
+            onClick:(e,active)=>{ if(active.length){ const idx=active[0].index; const label=incomeChart.data.labels[idx]; const val=incomeChart.data.datasets[0].data[idx]; const percent = totalInc>0 ? ((val/totalInc)*100).toFixed(1) : 0; alert(`${label}：¥${val.toFixed(2)}，占收入的 ${percent}%`); } }
+          }
+        });
+      }
+      function addBookkeeping(){ if(!currentBkCategory){ alert('请选择分类'); return; } let amount=parseFloat(document.getElementById('bkAmount').value); if(isNaN(amount)||amount<=0) return; bkRecords.push({id:Date.now(),type:currentBkType,category:currentBkCategory,amount,date:new Date().toISOString().slice(0,10),note:document.getElementById('bkNote').value.trim()}); saveAll(); refreshBookkeepingUI(); document.getElementById('bkAmount').value=''; document.getElementById('bkNote').value=''; haptic(); }
+      function changeBkMonth(delta){ let nm=currentBkMonth+delta, ny=currentBkYear; if(nm<0){ nm=11; ny--; } if(nm>11){ nm=0; ny++; } currentBkYear=ny; currentBkMonth=nm; document.getElementById('currentMonthBk').innerText=`${currentBkYear}年 ${currentBkMonth+1}月`; refreshBookkeepingUI(); }
+      function showRecordModal(){ const recs=bkRecords.filter(r=>{let d=new Date(r.date); return d.getFullYear()===currentBkYear && d.getMonth()===currentBkMonth;}); if(!recs.length){ alert('本月无记录'); return; } document.getElementById('recordListContainer').innerHTML=recs.map(r=>`<div class="modal-record-item"><div><strong>${r.type==='income'?'💰收入':'💸支出'}</strong> ${r.category} ${r.note?`· ${escapeHtml(r.note)}`:''}<br>${r.date} ¥${r.amount.toFixed(2)}</div><div><button class="delete-record" data-id="${r.id}">🗑️</button></div></div>`).join(''); document.querySelectorAll('.delete-record').forEach(btn=>btn.addEventListener('click',()=>{ bkRecords=bkRecords.filter(r=>r.id!=btn.dataset.id); saveAll(); refreshBookkeepingUI(); showRecordModal(); })); document.getElementById('recordModal').classList.add('show'); }
+
+      // ========== 工时模块 ==========
+      function renderCategoryList(){
+        const container = document.getElementById('categoryList');
+        container.innerHTML = workCategories.map(cat => `
+          <div class="category-item">
+            <span class="category-name">${escapeHtml(cat.name)}</span>
+            <input type="number" class="category-rate" data-id="${cat.id}" value="${cat.hourlyRate}" step="0.5">
+            <div class="category-actions"><button class="save-category" data-id="${cat.id}">💾</button><button class="delete-category" data-id="${cat.id}">🗑️</button></div>
+          </div>
+        `).join('');
+        document.querySelectorAll('.save-category').forEach(btn=>btn.addEventListener('click',()=>{ const id=btn.dataset.id; const rateInput=btn.closest('.category-item').querySelector('.category-rate'); const newRate=parseFloat(rateInput.value); if(!isNaN(newRate)&&newRate>0){ const cat=workCategories.find(c=>c.id===id); if(cat) cat.hourlyRate=newRate; saveAll(); renderCategorySelect(); renderWorkStatsAndChart(); } }));
+        document.querySelectorAll('.delete-category').forEach(btn=>btn.addEventListener('click',()=>{ const id=btn.dataset.id; if(confirm('删除分类后，相关工时记录将变为“未分类”，确定删除？')){ workCategories=workCategories.filter(c=>c.id!==id); for(let key in records){ records[key]=records[key].map(r=>{ if(r.categoryId===id) return {...r, categoryId: null}; return r; }); } saveAll(); renderCategoryList(); renderCategorySelect(); renderWorkCalendar(); renderWorkStatsAndChart(); } }));
+      }
+      function renderCategorySelect(){
+        const select = document.getElementById('workCategorySelect');
+        select.innerHTML = '<option value="">-- 选择分类 --</option>' + workCategories.map(cat => `<option value="${cat.id}" data-rate="${cat.hourlyRate}">${escapeHtml(cat.name)} (¥${cat.hourlyRate}/h)</option>`).join('');
+        select.onchange = () => { const selected = select.options[select.selectedIndex]; const rate = selected.getAttribute('data-rate'); if(rate) document.getElementById('workRateInput').value = rate; };
+      }
+      function addNewCategory(){
+        const name = document.getElementById('newCategoryName').value.trim();
+        const rate = parseFloat(document.getElementById('newCategoryRate').value);
+        if(!name || isNaN(rate) || rate<=0){ alert('请输入有效的分类名称和时薪'); return; }
+        workCategories.push({ id: 'cat_'+Date.now(), name, hourlyRate: rate });
+        saveAll(); renderCategoryList(); renderCategorySelect();
+        document.getElementById('newCategoryName').value = ''; document.getElementById('newCategoryRate').value = '';
+        haptic();
+      }
+      function renderWorkStatsAndChart(){
+        const y=workDisplayYear, m=workDisplayMonth;
+        const daysInMonth = getDaysInMonth(y,m);
+        let categoryHours = new Map(), categoryIncome = new Map(), totalHours = 0;
+        for(let d=1; d<=daysInMonth; d++){
+          const key = formatDateKey(y,m,d);
+          (records[key]||[]).forEach(r=>{
+            totalHours += r.hours;
+            const catId = r.categoryId;
+            if(catId){
+              categoryHours.set(catId, (categoryHours.get(catId)||0) + r.hours);
+              categoryIncome.set(catId, (categoryIncome.get(catId)||0) + r.income);
+            } else {
+              categoryHours.set('unknown', (categoryHours.get('unknown')||0) + r.hours);
+              categoryIncome.set('unknown', (categoryIncome.get('unknown')||0) + r.income);
+            }
+          });
+        }
+        const labels = [], data = [];
+        for(let [id, hours] of categoryHours.entries()){
+          let label = id === 'unknown' ? '未分类' : (workCategories.find(c=>c.id===id)?.name || id);
+          labels.push(label);
+          data.push(hours);
+        }
+        if(categoryChart) categoryChart.destroy();
+        const ctx = document.getElementById('categoryPieChart').getContext('2d');
+        if(totalHours === 0){
+          categoryChart = new Chart(ctx, { type:'pie', data:{ labels:['暂无数据'], datasets:[{ data:[1], backgroundColor:['#ccc'] }] }, options:{ plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:()=>'无工时记录' } } } } });
+        } else {
+          const incomeMap = new Map();
+          for(let [id, inc] of categoryIncome.entries()){
+            let label = id === 'unknown' ? '未分类' : (workCategories.find(c=>c.id===id)?.name || id);
+            incomeMap.set(label, inc);
+          }
+          categoryChart = new Chart(ctx, { type:'pie', data:{ labels, datasets:[{ data, backgroundColor:['#FFB3BA','#C5E99B','#B5E3FF','#FFD6A5','#D4B8D4','#A7E0E0','#FBC8B5','#C9C9C9'] }] }, options:{ plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label: (ctx) => { const label = ctx.label || ''; const hours = ctx.raw; const percent = ((hours / totalHours) * 100).toFixed(1); const income = incomeMap.get(label) || 0; return `${label}: ${hours.toFixed(1)}小时 (${percent}%)，收入：¥${income.toFixed(2)}`; } } } } } });
         }
       }
-      return `<div class="${cls}" data-date="${isPlaceholder?'':key}"><div class="day-number">${isPlaceholder?'':d}</div>${bottomHtml}</div>`;
-    }
-    function renderGirlCalendar(){
-      const y=girlDisplayYear, m=girlDisplayMonth;
-      const first = getFirstDayIndex(y,m), dim = getDaysInMonth(y,m);
-      let cells = [];
-      for(let i=1; i<first; i++) cells.push(buildGirlCell(y,m,0,true));
-      for(let d=1; d<=dim; d++) cells.push(buildGirlCell(y,m,d,false));
-      const totalCells = 42;
-      const remaining = totalCells - cells.length;
-      for(let i=0; i<remaining; i++) cells.push(buildGirlCell(y,m,0,true));
-      const gridId = girlCurrentMode==='period' ? 'girlCalendarGrid' : 'girlImportantCalendarGrid';
-      document.getElementById(gridId).innerHTML = cells.join('');
-      document.querySelectorAll(`#${gridId} .day-cell:not(.empty)`).forEach(cell=>cell.addEventListener('click',()=>{
-        if(girlCurrentMode==='period') onPeriodClick(cell.dataset.date);
-        else onImportantClick(cell.dataset.date);
-      }));
-    }
-    function onPeriodClick(dateKey){
-      const existing = menstrualData[dateKey] || { isPeriod: false, symptoms: [] };
-      const symptomsList = ['疲劳','腹痛','头痛'];
-      const modal = document.createElement('div'); modal.className='lock-overlay'; modal.style.zIndex='3000';
-      modal.innerHTML = `
-        <div style="background:#fff6e8; border-radius:48px; padding:24px; width:300px; color:#2d1b3a; text-align:left; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-          <h4 style="margin-bottom:20px; font-size:1.2rem; color:#b3415c; text-align:center;">🌸 生理期标记 - ${dateKey}</h4>
-          <label style="display:flex; align-items:center; gap:8px; margin-bottom:20px; font-weight:500;">
-            <input type="checkbox" id="periodCheckbox" ${existing.isPeriod?'checked':''}> <span>经期中</span>
-          </label>
-          <div style="margin-bottom:12px; font-weight:600;">症状</div>
-          <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px;">
-            ${symptomsList.map(s => `<button type="button" class="symptom-btn" data-symptom="${s}" style="background:${existing.symptoms.includes(s)?'#f3bc7c':'#fff0df'}; border:2px solid #f7ad6a; border-radius:60px; padding:8px 16px; cursor:pointer; font-size:0.9rem; color:#2d1b3a;">${s}</button>`).join('')}
-          </div>
-          <div style="display:flex; gap:12px; justify-content:flex-end;">
-            <button id="savePeriodBtn" class="add-btn" style="background:#b8e0b0; border:none; padding:10px 20px; border-radius:60px; font-weight:bold;">保存</button>
-            <button id="cancelPeriodBtn" class="add-btn" style="background:#ffc2a1; border:none; padding:10px 20px; border-radius:60px; font-weight:bold;">取消</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      modal.querySelectorAll('.symptom-btn').forEach(btn=>btn.addEventListener('click',()=>{ const isActive = btn.style.backgroundColor === 'rgb(243, 188, 124)' || btn.style.backgroundColor === '#f3bc7c'; btn.style.backgroundColor = isActive ? '#fff0df' : '#f3bc7c'; }));
-      modal.querySelector('#savePeriodBtn').onclick=()=>{
-        const isPeriod = modal.querySelector('#periodCheckbox').checked;
-        const symptoms = Array.from(modal.querySelectorAll('.symptom-btn')).filter(btn => btn.style.backgroundColor === 'rgb(243, 188, 124)' || btn.style.backgroundColor === '#f3bc7c').map(btn=>btn.dataset.symptom);
-        if(isPeriod || symptoms.length) menstrualData[dateKey] = { isPeriod, symptoms };
-        else delete menstrualData[dateKey];
-        saveAll(); document.body.removeChild(modal); renderGirlCalendar(); checkPeriodReminder();
-      };
-      modal.querySelector('#cancelPeriodBtn').onclick=()=>document.body.removeChild(modal);
-    }
-    function onImportantClick(dateKey){
-      const title = prompt('添加重要日子', '纪念日');
-      if(title){ importantDays.push({ id:Date.now(), title, date:dateKey, repeat:false }); saveAll(); renderImportantList(); renderGirlCalendar(); }
-    }
-    function renderImportantList(){
-      const container = document.getElementById('girlImportantList');
-      if(!importantDays.length){ container.innerHTML='<div>暂无重要日子</div>'; return; }
-      const today = new Date(); today.setHours(0,0,0,0);
-      container.innerHTML = importantDays.map(imp=>{
-        let target = new Date(imp.date);
-        let diff = 0;
-        if(imp.repeat){
-          let curYear = today.getFullYear();
-          let thisYear = new Date(curYear, target.getMonth(), target.getDate());
-          if(thisYear < today) thisYear.setFullYear(curYear+1);
-          diff = Math.ceil((thisYear - today)/86400000);
-        } else diff = Math.ceil((target - today)/86400000);
-        const prefix = diff>=0 ? '还有' : '已过';
-        const absDiff = Math.abs(diff);
-        return `<div class="important-item"><div class="important-info"><div class="important-title">📌 ${escapeHtml(imp.title)}</div><div class="important-date">${imp.date} ${imp.repeat?'🔄每年':''}</div></div><div class="important-actions"><button class="edit-imp" data-id="${imp.id}">✏️</button><button class="del-imp" data-id="${imp.id}">🗑️</button><div class="important-days"><div class="important-days-number">${absDiff}</div><div class="important-days-label">${prefix} ${absDiff===1?'天':'天'}</div></div></div></div>`;
-      }).join('');
-      document.querySelectorAll('.del-imp').forEach(btn=>btn.addEventListener('click',e=>{ let id=parseInt(btn.dataset.id); importantDays=importantDays.filter(d=>d.id!==id); saveAll(); renderImportantList(); renderGirlCalendar(); }));
-      document.querySelectorAll('.edit-imp').forEach(btn=>btn.addEventListener('click',e=>{ let id=parseInt(btn.dataset.id); let imp=importantDays.find(d=>d.id===id); if(imp){ let newTitle=prompt('编辑标题',imp.title); if(newTitle) imp.title=newTitle; let newDate=prompt('日期(YYYY-MM-DD)',imp.date); if(newDate&&/^\d{4}-\d{2}-\d{2}$/.test(newDate)) imp.date=newDate; let newRepeat=confirm('每年重复？'); imp.repeat=newRepeat; saveAll(); renderImportantList(); renderGirlCalendar(); } }));
-    }
-    function checkPeriodReminder(){
-      if(!reminderEnabled) return;
-      const today = new Date(); today.setHours(0,0,0,0);
-      const dates = Object.keys(menstrualData).filter(k=>menstrualData[k]?.isPeriod).sort();
-      if(dates.length===0) return;
-      let lastPeriodStart = new Date(dates[dates.length-1]);
-      let nextPeriodStart = new Date(lastPeriodStart);
-      nextPeriodStart.setDate(lastPeriodStart.getDate()+cycleLength);
-      let diffDays = Math.ceil((nextPeriodStart - today)/86400000);
-      if(diffDays===2) alert('🌸 温馨提示：预计2天后进入经期，请提前做好准备。');
-    }
-    function initGirlCalendar(){
-      const now = new Date();
-      for(let y=now.getFullYear()-5; y<=now.getFullYear()+5; y++) document.getElementById('girlYearSelect').add(new Option(y,y));
-      document.getElementById('girlYearSelect').value = girlDisplayYear;
-      for(let m=1;m<=12;m++) document.getElementById('girlMonthSelect').add(new Option(m,m));
-      document.getElementById('girlMonthSelect').value = girlDisplayMonth+1;
-      document.getElementById('girlYearSelect').addEventListener('change',()=>{ girlDisplayYear=parseInt(document.getElementById('girlYearSelect').value); renderGirlCalendar(); });
-      document.getElementById('girlMonthSelect').addEventListener('change',()=>{ girlDisplayMonth=parseInt(document.getElementById('girlMonthSelect').value)-1; renderGirlCalendar(); });
-      document.querySelectorAll('.girl-tab').forEach(tab=>tab.addEventListener('click',()=>{
-        document.querySelectorAll('.girl-tab').forEach(t=>t.classList.remove('active'));
-        tab.classList.add('active');
-        girlCurrentMode = tab.dataset.girlmode;
-        document.getElementById('girlPeriodPanel').style.display = girlCurrentMode==='period'?'block':'none';
-        document.getElementById('girlImportantPanel').style.display = girlCurrentMode==='important'?'block':'none';
-        renderGirlCalendar();
-        if(girlCurrentMode==='important') renderImportantList();
-        haptic();
-      }));
-      document.getElementById('saveGirlMenstrualBtn').addEventListener('click',()=>{
-        cycleLength = parseInt(document.getElementById('girlCycleLength').value);
-        periodDays = parseInt(document.getElementById('girlPeriodDays').value);
-        reminderEnabled = document.getElementById('periodReminderCheckbox').checked;
-        saveAll(); renderGirlCalendar(); checkPeriodReminder(); alert('设置已保存');
-      });
-      document.getElementById('addGirlImportantBtn').addEventListener('click',()=>{
-        const title = document.getElementById('girlImpTitle').value.trim();
-        const date = document.getElementById('girlImpDate').value;
-        if(title&&date){ importantDays.push({ id:Date.now(), title, date, repeat:document.getElementById('girlImpRepeat').checked }); saveAll(); renderImportantList(); renderGirlCalendar(); }
-      });
-      renderGirlCalendar();
-      document.getElementById('periodReminderCheckbox').checked = reminderEnabled;
-    }
-
-    // ========== 笔记模块 ==========
-    function renderNoteCategories(){
-      const bar = document.getElementById('noteCategoriesBar');
-      bar.innerHTML = noteCategories.map(cat => `<div class="note-cat ${currentNoteCategoryId===cat?'active':''}" data-cat="${cat}">📁 ${cat}</div>`).join('') + `<button class="add-cat-btn" id="addNoteCatBtn">➕ 分类</button>`;
-      document.querySelectorAll('.note-cat').forEach(el=>el.addEventListener('click',()=>{ currentNoteCategoryId=el.dataset.cat; renderNoteCategories(); renderNoteCards(); haptic(); }));
-      document.getElementById('addNoteCatBtn').onclick=()=>{ let newCat=prompt('新分类'); if(newCat&&!noteCategories.includes(newCat)){ noteCategories.push(newCat); saveAll(); renderNoteCategories(); } };
-    }
-    function renderNoteCards(){
-      const filtered = notes.filter(n=>n.categoryId===currentNoteCategoryId);
-      const container = document.getElementById('noteListCards');
-      if(!filtered.length){ container.innerHTML='<div style="padding:20px;text-align:center;">✨ 暂无笔记，点击“新建”添加</div>'; return; }
-      container.innerHTML = filtered.map(n=>`<div class="note-card ${currentNoteId===n.id?'active':''}" data-id="${n.id}"><div class="note-card-info"><div class="note-card-title">📄 ${escapeHtml(n.title)}</div><div class="note-card-date">${new Date(n.updatedAt).toLocaleDateString()}</div></div><div class="note-card-actions"><button class="delete-note-card" data-id="${n.id}">🗑️</button></div></div>`).join('');
-      document.querySelectorAll('.note-card').forEach(card=>card.addEventListener('click',(e)=>{ if(!e.target.classList.contains('delete-note-card')){ currentNoteId=parseInt(card.dataset.id); renderNoteCards(); loadNoteToEditor(); haptic(); } }));
-      document.querySelectorAll('.delete-note-card').forEach(btn=>btn.addEventListener('click',(e)=>{ e.stopPropagation(); const id=parseInt(btn.dataset.id); notes=notes.filter(n=>n.id!==id); if(notes.length === 0){ currentNoteId = null; } else if(currentNoteId === id){ currentNoteId = notes[0]?.id || null; } saveAll(); renderNoteCards(); if(currentNoteId) loadNoteToEditor(); else { document.getElementById('noteTitleInput').value = ''; document.getElementById('noteEditor').innerHTML = ''; } }));
-    }
-    function loadNoteToEditor(){ const note=notes.find(n=>n.id===currentNoteId); if(note){ document.getElementById('noteTitleInput').value=note.title; document.getElementById('noteEditor').innerHTML=note.content||''; } }
-    function saveCurrentNote(){ 
-      if(!currentNoteId){
-        newNote();
-        return;
+      function renderWorkCalendar(){
+        const y=workDisplayYear, m=workDisplayMonth;
+        const first = getFirstDayIndex(y,m), dim = getDaysInMonth(y,m);
+        let cells = [];
+        for(let i=1; i<first; i++) cells.push(`<div class="day-cell empty"><div class="day-number"></div></div>`);
+        for(let d=1; d<=dim; d++) cells.push(buildWorkCell(y,m,d));
+        const totalCells=42, rem = totalCells - cells.length;
+        for(let i=0;i<rem;i++) cells.push(`<div class="day-cell empty"><div class="day-number"></div></div>`);
+        document.getElementById('calendarGrid').innerHTML = cells.join('');
+        document.querySelectorAll('#calendarGrid .day-cell:not(.empty)').forEach(cell=>{
+          cell.addEventListener('click',()=>{
+            const dateKey = cell.dataset.date;
+            if(dateKey){
+              document.querySelectorAll('#calendarGrid .day-cell').forEach(c=>c.classList.remove('selected'));
+              cell.classList.add('selected');
+              currentSelectedWorkDate = dateKey;
+              document.getElementById('selectedDateDisplay').innerHTML = `📅 已选中日期：${dateKey}`;
+              haptic();
+            }
+          });
+        });
+        renderWorkStatsAndChart();
       }
-      const note=notes.find(n=>n.id===currentNoteId);
-      if(note){ 
-        note.title=document.getElementById('noteTitleInput').value.trim()||'无标题'; 
-        note.content=document.getElementById('noteEditor').innerHTML; 
-        note.updatedAt=new Date().toISOString(); 
+      function buildWorkCell(y,m,d){
+        const key=formatDateKey(y,m,d); const sum=getDaySummary(key); const today=new Date(); const isToday=(y===today.getFullYear() && m===today.getMonth() && d===today.getDate());
+        const cls = `day-cell ${isToday?'today':''}`;
+        let bottom = (sum.hours>0||sum.income>0)?`<div class="day-hours">${sum.hours.toFixed(1)}h</div><div class="day-income">¥${sum.income.toFixed(0)}</div>`:`<div class="empty-indicator">✨</div>`;
+        return `<div class="${cls}" data-date="${key}"><div class="day-number">${d}</div>${bottom}</div>`;
+      }
+      function addWorkRecordFromForm(){
+        if(!currentSelectedWorkDate){ alert('请先点击日历格子选择日期'); return; }
+        const categoryId = document.getElementById('workCategorySelect').value;
+        if(!categoryId){ alert('请选择分类'); return; }
+        const hours = parseFloat(document.getElementById('workHoursInput').value);
+        let rate = parseFloat(document.getElementById('workRateInput').value);
+        if(isNaN(hours)||hours<=0){ alert('请输入有效的工时'); return; }
+        if(isNaN(rate)||rate<=0){ alert('请输入有效的时薪'); return; }
+        const key = currentSelectedWorkDate;
+        const newRecord = { id: Date.now()+''+Math.random(), categoryId, hours, rate, income: hours*rate };
+        let arr = records[key] || [];
+        arr.push(newRecord);
+        records[key] = arr;
+        saveAll();
+        renderWorkCalendar();
+        document.getElementById('workHoursInput').value = '';
+        haptic();
+      }
+      function openModal(key){
+        selectedDateStr=key; const d=new Date(key);
+        document.getElementById('modalDateTitle').textContent = `${d.getMonth()+1}月${d.getDate()}日 工时明细`;
+        renderRecordsInModal();
+        document.getElementById('dayModal').classList.add('show');
+      }
+      function renderRecordsInModal(){
+        const arr = records[selectedDateStr]||[];
+        const container = document.getElementById('recordsListContainer');
+        if(!arr.length){ container.innerHTML='<div style="padding:16px; text-align:center;">✨ 暂无记录</div>'; return; }
+        container.innerHTML = arr.map(r => { const catName = workCategories.find(c=>c.id===r.categoryId)?.name || '未知分类'; return `<div class="record-item"><span><strong>${catName}</strong> ${r.hours}h @ ¥${r.rate}/h</span><span>¥${r.income.toFixed(2)}</span><div><button class="edit-btn" data-id="${r.id}">✎</button><button class="delete-btn" data-id="${r.id}">🗑</button></div></div>`; }).join('');
+        document.querySelectorAll('.edit-btn').forEach(b=>b.addEventListener('click',()=>startEdit(b.dataset.id)));
+        document.querySelectorAll('.delete-btn').forEach(b=>b.addEventListener('click',()=>{ let arr2=records[selectedDateStr]||[]; arr2=arr2.filter(r=>r.id!=b.dataset.id); if(arr2.length) records[selectedDateStr]=arr2; else delete records[selectedDateStr]; saveAll(); renderRecordsInModal(); renderWorkCalendar(); }));
+      }
+      function startEdit(id){ const rec=(records[selectedDateStr]||[]).find(r=>r.id==id); if(rec){ editingRecordId=id; showEditForm(rec); } }
+      function hideEditForm(){ document.getElementById('editFormContainer').style.display='none'; editingRecordId=null; }
+      function showEditForm(init){
+        const catOptions = workCategories.map(c=>`<option value="${c.id}" ${init.categoryId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
+        const formHtml = `<div class="edit-form"><select id="editCategory">${catOptions}</select><input id="editHours" type="number" step="0.1" placeholder="工时" value="${init.hours||''}"><input id="editRate" type="number" step="0.1" placeholder="时薪" value="${init.rate||''}"><div style="display:flex; gap:12px; margin-top:12px;"><button id="saveEditBtn" class="add-btn" style="flex:1;">保存</button><button id="cancelEditBtn" class="add-btn" style="background:#ffc2a1; flex:1;">取消</button></div></div>`;
+        const container = document.getElementById('editFormContainer');
+        container.innerHTML = formHtml; container.style.display = 'block';
+        document.getElementById('cancelEditBtn').onclick = hideEditForm;
+        document.getElementById('saveEditBtn').onclick = ()=>{
+          const categoryId = document.getElementById('editCategory').value;
+          const hours = parseFloat(document.getElementById('editHours').value);
+          const rate = parseFloat(document.getElementById('editRate').value);
+          if(isNaN(hours)||hours<=0){ alert('有效工时'); return; }
+          if(isNaN(rate)||rate<=0){ alert('有效时薪'); return; }
+          const updated = { id: editingRecordId, categoryId, hours, rate, income: hours*rate };
+          let arr = records[selectedDateStr]||[];
+          arr = arr.map(r=>r.id==editingRecordId?updated:r);
+          records[selectedDateStr] = arr;
+          saveAll(); renderRecordsInModal(); renderWorkCalendar(); hideEditForm();
+          haptic();
+        };
+      }
+      function closeModal(){ document.getElementById('dayModal').classList.remove('show'); hideEditForm(); }
+
+      // ========== 女生日历完整实现 ==========
+      const lunarInfo = [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04bd7,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0];
+      function getLunarYearInfo(year){ return lunarInfo[year-1900]; }
+      function getLunarMonthDays(year, month){ let bit = 0x10000 >> month; return (getLunarYearInfo(year) & bit) ? 30 : 29; }
+      function getLunarLeapMonth(year){ return getLunarYearInfo(year) & 0xf; }
+      function solarToLunar(y,m,d){
+        let baseDate = new Date(1900,0,31);
+        let target = new Date(y,m-1,d);
+        let offset = Math.floor((target - baseDate)/86400000);
+        let year = 1900, month, day, isLeap=false;
+        while(offset>0){
+          let daysOfYear = 0;
+          for(let i=1;i<=12;i++){
+            let days = getLunarMonthDays(year,i);
+            if(i===getLunarLeapMonth(year)) days = getLunarMonthDays(year,i+1);
+            daysOfYear += days;
+          }
+          if(offset>=daysOfYear){ offset-=daysOfYear; year++; continue; }
+          let leap = getLunarLeapMonth(year);
+          for(let i=1;i<=12;i++){
+            let days = getLunarMonthDays(year,i);
+            if(i===leap){ 
+              let leapDays = getLunarMonthDays(year,i+1);
+              if(offset<leapDays){ month=i; day=offset+1; isLeap=true; break; }
+              offset-=leapDays;
+            }
+            if(offset<days){ month=i; day=offset+1; isLeap=false; break; }
+            offset-=days;
+          }
+          break;
+        }
+        return { year, month, day, isLeap };
+      }
+      function getShortLunarDayString(y,m,d){
+        const lunar = solarToLunar(y,m,d);
+        const arr = ['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+        return arr[lunar.day-1] || '三十';
+      }
+      const festivals = {"0101":"元旦","0214":"情人节","0308":"妇女节","0501":"劳动节","1001":"国庆节","lunar-0101":"春节","lunar-0115":"元宵节","lunar-0505":"端午节","lunar-0815":"中秋节"};
+      function getFestival(y,m,d){
+        const mmdd = `${String(m).padStart(2,'0')}${String(d).padStart(2,'0')}`;
+        if(festivals[mmdd]) return festivals[mmdd];
+        const lunar = solarToLunar(y,m,d);
+        const key = `lunar-${String(lunar.month).padStart(2,'0')}${String(lunar.day).padStart(2,'0')}`;
+        return festivals[key] || null;
+      }
+      function getLunarOrFestivalShort(y,m,d){
+        const fest = getFestival(y,m,d);
+        if(fest) return fest;
+        return getShortLunarDayString(y,m,d);
+      }
+      function getOvulationDates(){
+        const dates = Object.keys(menstrualData).filter(k=>menstrualData[k]?.isPeriod).sort();
+        if(!dates.length) return new Set();
+        let last = dates[dates.length-1];
+        let start = new Date(last);
+        let nextPeriod = new Date(start);
+        nextPeriod.setDate(start.getDate()+cycleLength);
+        let ovulation = new Date(nextPeriod);
+        ovulation.setDate(nextPeriod.getDate()-14);
+        let set = new Set();
+        for(let i=-2;i<=2;i++){ let day=new Date(ovulation); day.setDate(ovulation.getDate()+i); set.add(formatDateKey(day.getFullYear(),day.getMonth(),day.getDate())); }
+        return set;
+      }
+      function buildGirlCell(y,m,d,isPlaceholder){
+        const key = formatDateKey(y,m,d);
+        const today = new Date();
+        const isToday = (y===today.getFullYear() && m===today.getMonth() && d===today.getDate());
+        let cls = `day-cell ${isToday?'today':''}`;
+        if(isPlaceholder) cls += ' empty';
+        let bottomHtml = '';
+        if(!isPlaceholder){
+          if(girlCurrentMode === 'period'){
+            const info = menstrualData[key];
+            const ovu = getOvulationDates();
+            let icons = [];
+            if(info?.isPeriod) icons.push('🌸');
+            if(info?.symptoms?.length) icons.push('⚠️');
+            if(ovu.has(key)) icons.push('💧');
+            bottomHtml = icons.length ? `<div class="day-badge">${icons.map(i=>`<span style="font-size:0.8rem;">${i}</span>`).join('')}</div>` : `<div class="empty-indicator">✨</div>`;
+          } else {
+            const text = getLunarOrFestivalShort(y, m+1, d);
+            bottomHtml = `<div class="lunar-text">${text}</div>`;
+          }
+        }
+        return `<div class="${cls}" data-date="${isPlaceholder?'':key}"><div class="day-number">${isPlaceholder?'':d}</div>${bottomHtml}</div>`;
+      }
+      function renderGirlCalendar(){
+        const y=girlDisplayYear, m=girlDisplayMonth;
+        const first = getFirstDayIndex(y,m), dim = getDaysInMonth(y,m);
+        let cells = [];
+        for(let i=1; i<first; i++) cells.push(buildGirlCell(y,m,0,true));
+        for(let d=1; d<=dim; d++) cells.push(buildGirlCell(y,m,d,false));
+        const totalCells = 42;
+        const remaining = totalCells - cells.length;
+        for(let i=0; i<remaining; i++) cells.push(buildGirlCell(y,m,0,true));
+        const gridId = girlCurrentMode==='period' ? 'girlCalendarGrid' : 'girlImportantCalendarGrid';
+        document.getElementById(gridId).innerHTML = cells.join('');
+        document.querySelectorAll(`#${gridId} .day-cell:not(.empty)`).forEach(cell=>cell.addEventListener('click',()=>{
+          if(girlCurrentMode==='period') onPeriodClick(cell.dataset.date);
+          else onImportantClick(cell.dataset.date);
+        }));
+      }
+      function onPeriodClick(dateKey){
+        const existing = menstrualData[dateKey] || { isPeriod: false, symptoms: [] };
+        const symptomsList = ['疲劳','腹痛','头痛'];
+        const modal = document.createElement('div'); modal.className='lock-overlay'; modal.style.zIndex='3000';
+        modal.innerHTML = `
+          <div style="background:#fff6e8; border-radius:48px; padding:24px; width:300px; color:#2d1b3a; text-align:left; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <h4 style="margin-bottom:20px; font-size:1.2rem; color:#b3415c; text-align:center;">🌸 生理期标记 - ${dateKey}</h4>
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom:20px; font-weight:500;">
+              <input type="checkbox" id="periodCheckbox" ${existing.isPeriod?'checked':''}> <span>经期中</span>
+            </label>
+            <div style="margin-bottom:12px; font-weight:600;">症状</div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px;">
+              ${symptomsList.map(s => `<button type="button" class="symptom-btn" data-symptom="${s}" style="background:${existing.symptoms.includes(s)?'#f3bc7c':'#fff0df'}; border:2px solid #f7ad6a; border-radius:60px; padding:8px 16px; cursor:pointer; font-size:0.9rem; color:#2d1b3a;">${s}</button>`).join('')}
+            </div>
+            <div style="display:flex; gap:12px; justify-content:flex-end;">
+              <button id="savePeriodBtn" class="add-btn" style="background:#b8e0b0; border:none; padding:10px 20px; border-radius:60px; font-weight:bold;">保存</button>
+              <button id="cancelPeriodBtn" class="add-btn" style="background:#ffc2a1; border:none; padding:10px 20px; border-radius:60px; font-weight:bold;">取消</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelectorAll('.symptom-btn').forEach(btn=>btn.addEventListener('click',()=>{ const isActive = btn.style.backgroundColor === 'rgb(243, 188, 124)' || btn.style.backgroundColor === '#f3bc7c'; btn.style.backgroundColor = isActive ? '#fff0df' : '#f3bc7c'; }));
+        modal.querySelector('#savePeriodBtn').onclick=()=>{
+          const isPeriod = modal.querySelector('#periodCheckbox').checked;
+          const symptoms = Array.from(modal.querySelectorAll('.symptom-btn')).filter(btn => btn.style.backgroundColor === 'rgb(243, 188, 124)' || btn.style.backgroundColor === '#f3bc7c').map(btn=>btn.dataset.symptom);
+          if(isPeriod || symptoms.length) menstrualData[dateKey] = { isPeriod, symptoms };
+          else delete menstrualData[dateKey];
+          saveAll(); document.body.removeChild(modal); renderGirlCalendar(); checkPeriodReminder();
+        };
+        modal.querySelector('#cancelPeriodBtn').onclick=()=>document.body.removeChild(modal);
+      }
+      function onImportantClick(dateKey){
+        const title = prompt('添加重要日子', '纪念日');
+        if(title){ importantDays.push({ id:Date.now(), title, date:dateKey, repeat:false }); saveAll(); renderImportantList(); renderGirlCalendar(); }
+      }
+      function renderImportantList(){
+        const container = document.getElementById('girlImportantList');
+        if(!importantDays.length){ container.innerHTML='<div>暂无重要日子</div>'; return; }
+        const today = new Date(); today.setHours(0,0,0,0);
+        container.innerHTML = importantDays.map(imp=>{
+          let target = new Date(imp.date);
+          let diff = 0;
+          if(imp.repeat){
+            let curYear = today.getFullYear();
+            let thisYear = new Date(curYear, target.getMonth(), target.getDate());
+            if(thisYear < today) thisYear.setFullYear(curYear+1);
+            diff = Math.ceil((thisYear - today)/86400000);
+          } else diff = Math.ceil((target - today)/86400000);
+          const prefix = diff>=0 ? '还有' : '已过';
+          const absDiff = Math.abs(diff);
+          return `<div class="important-item"><div class="important-info"><div class="important-title">📌 ${escapeHtml(imp.title)}</div><div class="important-date">${imp.date} ${imp.repeat?'🔄每年':''}</div></div><div class="important-actions"><button class="edit-imp" data-id="${imp.id}">✏️</button><button class="del-imp" data-id="${imp.id}">🗑️</button><div class="important-days"><div class="important-days-number">${absDiff}</div><div class="important-days-label">${prefix} ${absDiff===1?'天':'天'}</div></div></div></div>`;
+        }).join('');
+        document.querySelectorAll('.del-imp').forEach(btn=>btn.addEventListener('click',e=>{ let id=parseInt(btn.dataset.id); importantDays=importantDays.filter(d=>d.id!==id); saveAll(); renderImportantList(); renderGirlCalendar(); }));
+        document.querySelectorAll('.edit-imp').forEach(btn=>btn.addEventListener('click',e=>{ let id=parseInt(btn.dataset.id); let imp=importantDays.find(d=>d.id===id); if(imp){ let newTitle=prompt('编辑标题',imp.title); if(newTitle) imp.title=newTitle; let newDate=prompt('日期(YYYY-MM-DD)',imp.date); if(newDate&&/^\d{4}-\d{2}-\d{2}$/.test(newDate)) imp.date=newDate; let newRepeat=confirm('每年重复？'); imp.repeat=newRepeat; saveAll(); renderImportantList(); renderGirlCalendar(); } }));
+      }
+      function checkPeriodReminder(){
+        if(!reminderEnabled) return;
+        const today = new Date(); today.setHours(0,0,0,0);
+        const dates = Object.keys(menstrualData).filter(k=>menstrualData[k]?.isPeriod).sort();
+        if(dates.length===0) return;
+        let lastPeriodStart = new Date(dates[dates.length-1]);
+        let nextPeriodStart = new Date(lastPeriodStart);
+        nextPeriodStart.setDate(lastPeriodStart.getDate()+cycleLength);
+        let diffDays = Math.ceil((nextPeriodStart - today)/86400000);
+        if(diffDays===2) alert('🌸 温馨提示：预计2天后进入经期，请提前做好准备。');
+      }
+      function initGirlCalendar(){
+        const now = new Date();
+        for(let y=now.getFullYear()-5; y<=now.getFullYear()+5; y++) document.getElementById('girlYearSelect').add(new Option(y,y));
+        document.getElementById('girlYearSelect').value = girlDisplayYear;
+        for(let m=1;m<=12;m++) document.getElementById('girlMonthSelect').add(new Option(m,m));
+        document.getElementById('girlMonthSelect').value = girlDisplayMonth+1;
+        document.getElementById('girlYearSelect').addEventListener('change',()=>{ girlDisplayYear=parseInt(document.getElementById('girlYearSelect').value); renderGirlCalendar(); });
+        document.getElementById('girlMonthSelect').addEventListener('change',()=>{ girlDisplayMonth=parseInt(document.getElementById('girlMonthSelect').value)-1; renderGirlCalendar(); });
+        document.querySelectorAll('.girl-tab').forEach(tab=>tab.addEventListener('click',()=>{
+          document.querySelectorAll('.girl-tab').forEach(t=>t.classList.remove('active'));
+          tab.classList.add('active');
+          girlCurrentMode = tab.dataset.girlmode;
+          document.getElementById('girlPeriodPanel').style.display = girlCurrentMode==='period'?'block':'none';
+          document.getElementById('girlImportantPanel').style.display = girlCurrentMode==='important'?'block':'none';
+          renderGirlCalendar();
+          if(girlCurrentMode==='important') renderImportantList();
+          haptic();
+        }));
+        document.getElementById('saveGirlMenstrualBtn').addEventListener('click',()=>{
+          cycleLength = parseInt(document.getElementById('girlCycleLength').value);
+          periodDays = parseInt(document.getElementById('girlPeriodDays').value);
+          reminderEnabled = document.getElementById('periodReminderCheckbox').checked;
+          saveAll(); renderGirlCalendar(); checkPeriodReminder(); alert('设置已保存');
+        });
+        document.getElementById('addGirlImportantBtn').addEventListener('click',()=>{
+          const title = document.getElementById('girlImpTitle').value.trim();
+          const date = document.getElementById('girlImpDate').value;
+          if(title&&date){ importantDays.push({ id:Date.now(), title, date, repeat:document.getElementById('girlImpRepeat').checked }); saveAll(); renderImportantList(); renderGirlCalendar(); }
+        });
+        renderGirlCalendar();
+        document.getElementById('periodReminderCheckbox').checked = reminderEnabled;
+      }
+
+      // ========== 笔记模块 ==========
+      function renderNoteCategories(){
+        const bar = document.getElementById('noteCategoriesBar');
+        bar.innerHTML = noteCategories.map(cat => `<div class="note-cat ${currentNoteCategoryId===cat?'active':''}" data-cat="${cat}">📁 ${cat}</div>`).join('') + `<button class="add-cat-btn" id="addNoteCatBtn">➕ 分类</button>`;
+        document.querySelectorAll('.note-cat').forEach(el=>el.addEventListener('click',()=>{ currentNoteCategoryId=el.dataset.cat; renderNoteCategories(); renderNoteCards(); haptic(); }));
+        document.getElementById('addNoteCatBtn').onclick=()=>{ let newCat=prompt('新分类'); if(newCat&&!noteCategories.includes(newCat)){ noteCategories.push(newCat); saveAll(); renderNoteCategories(); } };
+      }
+      function renderNoteCards(){
+        const filtered = notes.filter(n=>n.categoryId===currentNoteCategoryId);
+        const container = document.getElementById('noteListCards');
+        if(!filtered.length){ container.innerHTML='<div style="padding:20px;text-align:center;">✨ 暂无笔记，点击“新建”添加</div>'; return; }
+        container.innerHTML = filtered.map(n=>`<div class="note-card ${currentNoteId===n.id?'active':''}" data-id="${n.id}"><div class="note-card-info"><div class="note-card-title">📄 ${escapeHtml(n.title)}</div><div class="note-card-date">${new Date(n.updatedAt).toLocaleDateString()}</div></div><div class="note-card-actions"><button class="delete-note-card" data-id="${n.id}">🗑️</button></div></div>`).join('');
+        document.querySelectorAll('.note-card').forEach(card=>card.addEventListener('click',(e)=>{ if(!e.target.classList.contains('delete-note-card')){ currentNoteId=parseInt(card.dataset.id); renderNoteCards(); loadNoteToEditor(); haptic(); } }));
+        document.querySelectorAll('.delete-note-card').forEach(btn=>btn.addEventListener('click',(e)=>{ e.stopPropagation(); const id=parseInt(btn.dataset.id); notes=notes.filter(n=>n.id!==id); if(notes.length === 0){ currentNoteId = null; } else if(currentNoteId === id){ currentNoteId = notes[0]?.id || null; } saveAll(); renderNoteCards(); if(currentNoteId) loadNoteToEditor(); else { document.getElementById('noteTitleInput').value = ''; document.getElementById('noteEditor').innerHTML = ''; } }));
+      }
+      function loadNoteToEditor(){ const note=notes.find(n=>n.id===currentNoteId); if(note){ document.getElementById('noteTitleInput').value=note.title; document.getElementById('noteEditor').innerHTML=note.content||''; } }
+      function saveCurrentNote(){ 
+        if(!currentNoteId){
+          newNote();
+          return;
+        }
+        const note=notes.find(n=>n.id===currentNoteId);
+        if(note){ 
+          note.title=document.getElementById('noteTitleInput').value.trim()||'无标题'; 
+          note.content=document.getElementById('noteEditor').innerHTML; 
+          note.updatedAt=new Date().toISOString(); 
+          saveAll(); 
+          renderNoteCards(); 
+          haptic();
+          alert('已保存'); 
+        } 
+      }
+      function newNote(){ 
+        const newId=Date.now(); 
+        notes.push({ id:newId, categoryId:currentNoteCategoryId, title:'新笔记', content:'', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() }); 
+        currentNoteId=newId; 
         saveAll(); 
         renderNoteCards(); 
+        loadNoteToEditor(); 
         haptic();
-        alert('已保存'); 
-      } 
-    }
-    function newNote(){ 
-      const newId=Date.now(); 
-      notes.push({ id:newId, categoryId:currentNoteCategoryId, title:'新笔记', content:'', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() }); 
-      currentNoteId=newId; 
-      saveAll(); 
-      renderNoteCards(); 
-      loadNoteToEditor(); 
-      haptic();
-    }
-    function insertList(type){
-      const editor=document.getElementById('noteEditor'); editor.focus();
-      const sel=window.getSelection(); if(!sel.rangeCount) return;
-      const range=sel.getRangeAt(0);
-      const selectedText=range.toString();
-      const tag=type==='ul'?'ul':'ol';
-      const lines=selectedText.split(/\r?\n/).filter(l=>l.trim());
-      let html=lines.length?`<${tag}>`+lines.map(l=>`<li>${escapeHtml(l)}</li>`).join('')+`</${tag}>`:`<${tag}><li></li></${tag}>`;
-      range.deleteContents();
-      const frag=range.createContextualFragment(html);
-      range.insertNode(frag);
-      range.collapse(false);
-      sel.removeAllRanges(); sel.addRange(range);
-    }
-    function bindNoteToolbar(){
-      const ed=document.getElementById('noteEditor');
-      document.querySelector('[data-cmd="bold"]')?.addEventListener('click',()=>{ document.execCommand('bold'); ed.focus(); });
-      document.getElementById('unorderedListBtn')?.addEventListener('click',()=>insertList('ul'));
-      document.getElementById('orderedListBtn')?.addEventListener('click',()=>insertList('ol'));
-      document.getElementById('clearFormatBtn')?.addEventListener('click',()=>{ document.execCommand('removeFormat'); ed.focus(); });
-      document.getElementById('textColorBtn')?.addEventListener('click',(e)=>{ e.stopPropagation(); showColorPicker('foreColor'); });
-      document.getElementById('bgColorBtn')?.addEventListener('click',(e)=>{ e.stopPropagation(); showColorPicker('backColor'); });
-      const iconPicker=document.getElementById('iconPicker');
-      const iconList=['😀','😂','😍','😭','😡','👍','❤️','⭐','🔥','💡','🔔','📌','✅','❌','⚠️','🎉','✨','💪'];
-      document.getElementById('insertIconBtn')?.addEventListener('click',()=>{
-        iconPicker.innerHTML=iconList.map(i=>`<span class="icon-option" style="font-size:1.6rem; cursor:pointer; padding:6px;">${i}</span>`).join('');
-        iconPicker.style.display=iconPicker.style.display==='none'?'flex':'none';
-        document.querySelectorAll('.icon-option').forEach(opt=>opt.addEventListener('click',()=>{ ed.focus(); document.execCommand('insertText',false,opt.textContent); iconPicker.style.display='none'; }));
-      });
-      document.getElementById('insertImageBtn')?.addEventListener('click',()=>{ let inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange=e=>{ let f=e.target.files[0]; if(f){ let reader=new FileReader(); reader.onload=ev=>{ let img=document.createElement('img'); img.src=ev.target.result; img.style.maxWidth='100%'; ed.focus(); document.execCommand('insertHTML',false,img.outerHTML); }; reader.readAsDataURL(f); } }; inp.click(); });
-    }
-    let activePanel=null;
-    function showColorPicker(cmd){
-      if(activePanel) activePanel.remove();
-      const colors=['#000000','#ffffff','#ff0000','#ff8c00','#ffd700','#008000','#00ced1','#0000ff','#800080'];
-      const panel=document.createElement('div'); panel.className='color-picker-panel';
-      colors.forEach(c=>{ let swatch=document.createElement('div'); swatch.className='color-option'; swatch.style.backgroundColor=c; swatch.addEventListener('click',()=>{ document.execCommand(cmd,false,c); document.getElementById('noteEditor').focus(); panel.remove(); activePanel=null; }); panel.appendChild(swatch); });
-      document.body.appendChild(panel); activePanel=panel;
-      setTimeout(()=>{ document.addEventListener('click',function close(e){ if(!panel.contains(e.target)){ panel.remove(); activePanel=null; document.removeEventListener('click',close); } }); },10);
-    }
-
-    // ========== 待办模块 ==========
-    function renderTodoCategories(){
-      const container=document.getElementById('todoCategoriesContainer');
-      container.innerHTML = todoCategories.map(cat => `<div class="cat-tab ${currentTodoCat===cat?'active':''}" data-cat="${cat}">${cat}</div>`).join('') + '<button id="addCategoryBtn" class="add-cat-btn">➕ 分类</button>';
-      document.querySelectorAll('.cat-tab').forEach(el=>el.addEventListener('click',()=>{ currentTodoCat=el.dataset.cat; renderTodoCategories(); renderTodoItems(); haptic(); }));
-      document.getElementById('addCategoryBtn').onclick=()=>{ let newCat=prompt('新分类'); if(newCat&&!todoCategories.includes(newCat)){ todoCategories.push(newCat); saveAll(); renderTodoCategories(); } };
-    }
-    function renderTodoItems(){
-      const filtered=todos.filter(t=>t.category===currentTodoCat);
-      const container=document.getElementById('todoItemsContainer');
-      if(!filtered.length){ container.innerHTML='<div style="text-align:center; padding:12px;">✨ 暂无待办</div>'; return; }
-      container.innerHTML=filtered.map(todo=>`<div class="todo-item" data-id="${todo.id}"><input type="checkbox" ${todo.completed?'checked':''}><input type="text" class="todo-text ${todo.completed?'completed':''}" value="${escapeHtml(todo.text)}"><button class="delete-todo">🗑️</button></div>`).join('');
-      container.querySelectorAll('.todo-item').forEach(item=>{
-        const id=parseInt(item.dataset.id);
-        const chk=item.querySelector('input[type="checkbox"]');
-        const txt=item.querySelector('.todo-text');
-        const del=item.querySelector('.delete-todo');
-        chk.addEventListener('change',()=>{
-          const todo=todos.find(t=>t.id===id);
-          if(todo){ todo.completed=chk.checked; if(todo.completed) txt.classList.add('completed'); else txt.classList.remove('completed'); saveAll(); }
+      }
+      function insertList(type){
+        const editor=document.getElementById('noteEditor'); editor.focus();
+        const sel=window.getSelection(); if(!sel.rangeCount) return;
+        const range=sel.getRangeAt(0);
+        const selectedText=range.toString();
+        const tag=type==='ul'?'ul':'ol';
+        const lines=selectedText.split(/\r?\n/).filter(l=>l.trim());
+        let html=lines.length?`<${tag}>`+lines.map(l=>`<li>${escapeHtml(l)}</li>`).join('')+`</${tag}>`:`<${tag}><li></li></${tag}>`;
+        range.deleteContents();
+        const frag=range.createContextualFragment(html);
+        range.insertNode(frag);
+        range.collapse(false);
+        sel.removeAllRanges(); sel.addRange(range);
+      }
+      function bindNoteToolbar(){
+        const ed=document.getElementById('noteEditor');
+        document.querySelector('[data-cmd="bold"]')?.addEventListener('click',()=>{ document.execCommand('bold'); ed.focus(); });
+        document.getElementById('unorderedListBtn')?.addEventListener('click',()=>insertList('ul'));
+        document.getElementById('orderedListBtn')?.addEventListener('click',()=>insertList('ol'));
+        document.getElementById('clearFormatBtn')?.addEventListener('click',()=>{ document.execCommand('removeFormat'); ed.focus(); });
+        document.getElementById('textColorBtn')?.addEventListener('click',(e)=>{ e.stopPropagation(); showColorPicker('foreColor'); });
+        document.getElementById('bgColorBtn')?.addEventListener('click',(e)=>{ e.stopPropagation(); showColorPicker('backColor'); });
+        const iconPicker=document.getElementById('iconPicker');
+        const iconList=['😀','😂','😍','😭','😡','👍','❤️','⭐','🔥','💡','🔔','📌','✅','❌','⚠️','🎉','✨','💪'];
+        document.getElementById('insertIconBtn')?.addEventListener('click',()=>{
+          iconPicker.innerHTML=iconList.map(i=>`<span class="icon-option" style="font-size:1.6rem; cursor:pointer; padding:6px;">${i}</span>`).join('');
+          iconPicker.style.display=iconPicker.style.display==='none'?'flex':'none';
+          document.querySelectorAll('.icon-option').forEach(opt=>opt.addEventListener('click',()=>{ ed.focus(); document.execCommand('insertText',false,opt.textContent); iconPicker.style.display='none'; }));
         });
-        txt.addEventListener('blur',()=>{ const todo=todos.find(t=>t.id===id); if(todo) todo.text=txt.value; saveAll(); });
-        del.addEventListener('click',()=>{ todos=todos.filter(t=>t.id!==id); saveAll(); renderTodoItems(); });
-      });
-    }
-    function addNewTodo(){ const text=document.getElementById('newTodoText').value.trim(); if(text){ todos.push({ id:Date.now(), text, completed:false, category:currentTodoCat }); saveAll(); renderTodoItems(); document.getElementById('newTodoText').value=''; haptic(); } }
+        document.getElementById('insertImageBtn')?.addEventListener('click',()=>{ let inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange=e=>{ let f=e.target.files[0]; if(f){ let reader=new FileReader(); reader.onload=ev=>{ let img=document.createElement('img'); img.src=ev.target.result; img.style.maxWidth='100%'; ed.focus(); document.execCommand('insertHTML',false,img.outerHTML); }; reader.readAsDataURL(f); } }; inp.click(); });
+      }
+      let activePanel=null;
+      function showColorPicker(cmd){
+        if(activePanel) activePanel.remove();
+        const colors=['#000000','#ffffff','#ff0000','#ff8c00','#ffd700','#008000','#00ced1','#0000ff','#800080'];
+        const panel=document.createElement('div'); panel.className='color-picker-panel';
+        colors.forEach(c=>{ let swatch=document.createElement('div'); swatch.className='color-option'; swatch.style.backgroundColor=c; swatch.addEventListener('click',()=>{ document.execCommand(cmd,false,c); document.getElementById('noteEditor').focus(); panel.remove(); activePanel=null; }); panel.appendChild(swatch); });
+        document.body.appendChild(panel); activePanel=panel;
+        setTimeout(()=>{ document.addEventListener('click',function close(e){ if(!panel.contains(e.target)){ panel.remove(); activePanel=null; document.removeEventListener('click',close); } }); },10);
+      }
 
-    // ========== 密码锁、主题 ==========
-    function showLock(callback){
-      if(!passwordEnabled||isUnlocked){ if(callback) callback(); return; }
-      const div=document.createElement('div'); div.className='lock-overlay'; let temp='';
-      div.innerHTML=`<div style="background:#fff0df; border-radius:48px; padding:24px; text-align:center;"><h3>🔐 请输入6位密码</h3><div style="font-size:2rem; letter-spacing:8px; margin:16px;" id="lockInput">______</div><div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:16px 0;" id="lockNumpad"></div><div><button id="lockOkBtn" style="background:#b8e0b0; border:none; border-radius:60px; padding:10px 24px; margin-right:12px;">确认</button><button id="lockCancelBtn" style="background:#ffc2a1; border:none; border-radius:60px; padding:10px 24px;">取消</button></div></div>`;
-      document.body.appendChild(div);
-      const inputSpan=div.querySelector('#lockInput');
-      const numpad=div.querySelector('#lockNumpad');
-      for(let i=1;i<=9;i++){ let b=document.createElement('button'); b.textContent=i; b.style.padding='12px'; b.style.borderRadius='60px'; b.style.border='none'; b.style.background='#fff'; b.onclick=()=>{ if(temp.length<6){ temp+=i; inputSpan.textContent=temp.padEnd(6,'_'); } }; numpad.appendChild(b); }
-      let b0=document.createElement('button'); b0.textContent='0'; b0.style.padding='12px'; b0.style.borderRadius='60px'; b0.onclick=()=>{ if(temp.length<6){ temp+='0'; inputSpan.textContent=temp.padEnd(6,'_'); } }; numpad.appendChild(b0);
-      let delBtn=document.createElement('button'); delBtn.textContent='⌫'; delBtn.style.padding='12px'; delBtn.style.borderRadius='60px'; delBtn.onclick=()=>{ temp=temp.slice(0,-1); inputSpan.textContent=temp.padEnd(6,'_'); }; numpad.appendChild(delBtn);
-      div.querySelector('#lockOkBtn').onclick=()=>{ if(temp===savedPassword){ isUnlocked=true; document.body.removeChild(div); if(callback) callback(); } else { alert('密码错误'); temp=''; inputSpan.textContent='______'; } };
-      div.querySelector('#lockCancelBtn').onclick=()=>{ document.body.removeChild(div); };
-    }
-    function setTheme(theme){
-      document.body.classList.remove('theme-mint','theme-sky');
-      if(theme==='mint') document.body.classList.add('theme-mint');
-      else if(theme==='sky') document.body.classList.add('theme-sky');
-      localStorage.setItem(THEME_KEY,theme);
-    }
+      // ========== 待办模块 ==========
+      function renderTodoCategories(){
+        const container=document.getElementById('todoCategoriesContainer');
+        container.innerHTML = todoCategories.map(cat => `<div class="cat-tab ${currentTodoCat===cat?'active':''}" data-cat="${cat}">${cat}</div>`).join('') + '<button id="addCategoryBtn" class="add-cat-btn">➕ 分类</button>';
+        document.querySelectorAll('.cat-tab').forEach(el=>el.addEventListener('click',()=>{ currentTodoCat=el.dataset.cat; renderTodoCategories(); renderTodoItems(); haptic(); }));
+        document.getElementById('addCategoryBtn').onclick=()=>{ let newCat=prompt('新分类'); if(newCat&&!todoCategories.includes(newCat)){ todoCategories.push(newCat); saveAll(); renderTodoCategories(); } };
+      }
+      function renderTodoItems(){
+        const filtered=todos.filter(t=>t.category===currentTodoCat);
+        const container=document.getElementById('todoItemsContainer');
+        if(!filtered.length){ container.innerHTML='<div style="text-align:center; padding:12px;">✨ 暂无待办</div>'; return; }
+        container.innerHTML=filtered.map(todo=>`<div class="todo-item" data-id="${todo.id}"><input type="checkbox" ${todo.completed?'checked':''}><input type="text" class="todo-text ${todo.completed?'completed':''}" value="${escapeHtml(todo.text)}"><button class="delete-todo">🗑️</button></div>`).join('');
+        container.querySelectorAll('.todo-item').forEach(item=>{
+          const id=parseInt(item.dataset.id);
+          const chk=item.querySelector('input[type="checkbox"]');
+          const txt=item.querySelector('.todo-text');
+          const del=item.querySelector('.delete-todo');
+          chk.addEventListener('change',()=>{
+            const todo=todos.find(t=>t.id===id);
+            if(todo){ todo.completed=chk.checked; if(todo.completed) txt.classList.add('completed'); else txt.classList.remove('completed'); saveAll(); }
+          });
+          txt.addEventListener('blur',()=>{ const todo=todos.find(t=>t.id===id); if(todo) todo.text=txt.value; saveAll(); });
+          del.addEventListener('click',()=>{ todos=todos.filter(t=>t.id!==id); saveAll(); renderTodoItems(); });
+        });
+      }
+      function addNewTodo(){ const text=document.getElementById('newTodoText').value.trim(); if(text){ todos.push({ id:Date.now(), text, completed:false, category:currentTodoCat }); saveAll(); renderTodoItems(); document.getElementById('newTodoText').value=''; haptic(); } }
 
-    function confirmClearAllData() {
-      const modal = document.createElement('div');
-      modal.className = 'lock-overlay';
-      modal.style.zIndex = '4000';
-      modal.innerHTML = `
-        <div style="background:#fff6e8; border-radius:48px; padding:24px; width:280px; text-align:center;">
-          <h3 style="color:#b3415c;">⚠️ 清空所有数据</h3>
-          <p style="margin:16px 0; color:#2d1b3a;">此操作不可恢复，请输入 <strong style="color:#e06c3c;">确认删除</strong> 以继续</p>
-          <input type="text" id="confirmClearInput" placeholder="确认删除" style="width:100%; padding:10px; border-radius:60px; border:2px solid #f7ad6a; margin-bottom:16px;">
-          <div style="display:flex; gap:12px;">
-            <button id="confirmClearOk" class="add-btn" style="flex:1;">确定</button>
-            <button id="confirmClearCancel" class="add-btn" style="background:#ffc2a1; flex:1;">取消</button>
+      // ========== 密码锁、主题 ==========
+      function showLock(callback){
+        if(!passwordEnabled||isUnlocked){ if(callback) callback(); return; }
+        const div=document.createElement('div'); div.className='lock-overlay'; let temp='';
+        div.innerHTML=`<div style="background:#fff0df; border-radius:48px; padding:24px; text-align:center;"><h3>🔐 请输入6位密码</h3><div style="font-size:2rem; letter-spacing:8px; margin:16px;" id="lockInput">______</div><div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:16px 0;" id="lockNumpad"></div><div><button id="lockOkBtn" style="background:#b8e0b0; border:none; border-radius:60px; padding:10px 24px; margin-right:12px;">确认</button><button id="lockCancelBtn" style="background:#ffc2a1; border:none; border-radius:60px; padding:10px 24px;">取消</button></div></div>`;
+        document.body.appendChild(div);
+        const inputSpan=div.querySelector('#lockInput');
+        const numpad=div.querySelector('#lockNumpad');
+        for(let i=1;i<=9;i++){ let b=document.createElement('button'); b.textContent=i; b.style.padding='12px'; b.style.borderRadius='60px'; b.style.border='none'; b.style.background='#fff'; b.onclick=()=>{ if(temp.length<6){ temp+=i; inputSpan.textContent=temp.padEnd(6,'_'); } }; numpad.appendChild(b); }
+        let b0=document.createElement('button'); b0.textContent='0'; b0.style.padding='12px'; b0.style.borderRadius='60px'; b0.onclick=()=>{ if(temp.length<6){ temp+='0'; inputSpan.textContent=temp.padEnd(6,'_'); } }; numpad.appendChild(b0);
+        let delBtn=document.createElement('button'); delBtn.textContent='⌫'; delBtn.style.padding='12px'; delBtn.style.borderRadius='60px'; delBtn.onclick=()=>{ temp=temp.slice(0,-1); inputSpan.textContent=temp.padEnd(6,'_'); }; numpad.appendChild(delBtn);
+        div.querySelector('#lockOkBtn').onclick=()=>{ if(temp===savedPassword){ isUnlocked=true; document.body.removeChild(div); if(callback) callback(); } else { alert('密码错误'); temp=''; inputSpan.textContent='______'; } };
+        div.querySelector('#lockCancelBtn').onclick=()=>{ document.body.removeChild(div); };
+      }
+      function setTheme(theme){
+        document.body.classList.remove('theme-mint','theme-sky');
+        if(theme==='mint') document.body.classList.add('theme-mint');
+        else if(theme==='sky') document.body.classList.add('theme-sky');
+        localStorage.setItem(THEME_KEY,theme);
+      }
+
+      function confirmClearAllData() {
+        const modal = document.createElement('div');
+        modal.className = 'lock-overlay';
+        modal.style.zIndex = '4000';
+        modal.innerHTML = `
+          <div style="background:#fff6e8; border-radius:48px; padding:24px; width:280px; text-align:center;">
+            <h3 style="color:#b3415c;">⚠️ 清空所有数据</h3>
+            <p style="margin:16px 0; color:#2d1b3a;">此操作不可恢复，请输入 <strong style="color:#e06c3c;">确认删除</strong> 以继续</p>
+            <input type="text" id="confirmClearInput" placeholder="确认删除" style="width:100%; padding:10px; border-radius:60px; border:2px solid #f7ad6a; margin-bottom:16px;">
+            <div style="display:flex; gap:12px;">
+              <button id="confirmClearOk" class="add-btn" style="flex:1;">确定</button>
+              <button id="confirmClearCancel" class="add-btn" style="background:#ffc2a1; flex:1;">取消</button>
+            </div>
           </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      const input = modal.querySelector('#confirmClearInput');
-      const okBtn = modal.querySelector('#confirmClearOk');
-      const cancelBtn = modal.querySelector('#confirmClearCancel');
-      okBtn.onclick = () => {
-        if(input.value === '确认删除') {
-          localStorage.clear();
-          location.reload();
-        } else {
-          alert('输入文字不正确');
-        }
-      };
-      cancelBtn.onclick = () => document.body.removeChild(modal);
-      input.focus();
-    }
-
-    function switchView(view){
-      if(passwordEnabled && !isUnlocked && view!=='settings'){ showLock(()=>switchView(view)); return; }
-      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-      document.getElementById(view+'View').classList.add('active');
-      document.querySelectorAll('.nav-item').forEach(i=>i.classList.toggle('active',i.dataset.view===view));
-      if(view==='calendar') renderWorkCalendar();
-      if(view==='girlCalendar'){ renderGirlCalendar(); if(girlCurrentMode==='important') renderImportantList(); }
-      if(view==='bookkeeping') refreshBookkeepingUI();
-      haptic();
-    }
-
-    function initAll(){
-      loadAll();
-      updatePasswordLockStatus();
-      document.getElementById('themeDefaultBtn').onclick=()=>setTheme('default');
-      document.getElementById('themeMintBtn').onclick=()=>setTheme('mint');
-      document.getElementById('themeSkyBtn').onclick=()=>setTheme('sky');
-      
-      for(let y=new Date().getFullYear()-5;y<=new Date().getFullYear()+5;y++) document.getElementById('workYearSelect').add(new Option(y,y));
-      document.getElementById('workYearSelect').value=workDisplayYear;
-      for(let m=1;m<=12;m++) document.getElementById('workMonthSelect').add(new Option(m,m));
-      document.getElementById('workMonthSelect').value=workDisplayMonth+1;
-      document.getElementById('workYearSelect').onchange=()=>{ workDisplayYear=parseInt(document.getElementById('workYearSelect').value); renderWorkCalendar(); };
-      document.getElementById('workMonthSelect').onchange=()=>{ workDisplayMonth=parseInt(document.getElementById('workMonthSelect').value)-1; renderWorkCalendar(); };
-      renderCategoryList(); renderCategorySelect(); renderWorkCalendar();
-      document.getElementById('addWorkRecordBtn').onclick = addWorkRecordFromForm;
-      document.getElementById('addCategoryBtn').onclick = addNewCategory;
-      const collapseHeader = document.getElementById('collapseHeader');
-      const collapseContent = document.getElementById('collapseContent');
-      collapseHeader.onclick = () => collapseContent.classList.toggle('show');
-      document.getElementById('closeModalBtn').onclick=closeModal;
-      document.getElementById('dayModal').onclick=e=>{ if(e.target===document.getElementById('dayModal')) closeModal(); };
-      initGirlCalendar();
-      document.getElementById('prevMonthBk').onclick=()=>changeBkMonth(-1);
-      document.getElementById('nextMonthBk').onclick=()=>changeBkMonth(1);
-      document.getElementById('addBkBtn').onclick=addBookkeeping;
-      document.getElementById('manageRecordsBtn').onclick=showRecordModal;
-      document.getElementById('closeRecordModalBtn').onclick=()=>document.getElementById('recordModal').classList.remove('show');
-      document.querySelectorAll('#bkTypeToggle .type-btn').forEach(btn=>btn.addEventListener('click',()=>{
-        document.querySelectorAll('#bkTypeToggle .type-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        currentBkType=btn.dataset.type;
-        renderBkCategoryGrid();
-      }));
-      renderBkCategoryGrid(); refreshBookkeepingUI();
-      renderNoteCategories(); renderNoteCards(); 
-      if(currentNoteId) loadNoteToEditor(); else { document.getElementById('noteTitleInput').value = ''; document.getElementById('noteEditor').innerHTML = ''; }
-      document.getElementById('newNoteBtn').onclick=newNote;
-      document.getElementById('saveNoteBtn').onclick=saveCurrentNote;
-      renderTodoCategories(); renderTodoItems();
-      document.getElementById('addTodoBtn').onclick=addNewTodo;
-      bindNoteToolbar();
-      const noteTabBtns = document.querySelectorAll('.note-tab');
-      const notePanel = document.getElementById('notePanel');
-      const todoPanel = document.getElementById('todoPanel');
-      noteTabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          const tab = btn.dataset.tab;
-          noteTabBtns.forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          if(tab === 'note'){
-            notePanel.classList.add('active');
-            todoPanel.classList.remove('active');
-            renderNoteCards();
+        `;
+        document.body.appendChild(modal);
+        const input = modal.querySelector('#confirmClearInput');
+        const okBtn = modal.querySelector('#confirmClearOk');
+        const cancelBtn = modal.querySelector('#confirmClearCancel');
+        okBtn.onclick = () => {
+          if(input.value === '确认删除') {
+            localStorage.clear();
+            location.reload();
           } else {
-            notePanel.classList.remove('active');
-            todoPanel.classList.add('active');
-            renderTodoCategories(); renderTodoItems();
+            alert('输入文字不正确');
           }
+        };
+        cancelBtn.onclick = () => document.body.removeChild(modal);
+        input.focus();
+      }
+
+      function switchView(view){
+        if(passwordEnabled && !isUnlocked && view!=='settings'){ showLock(()=>switchView(view)); return; }
+        document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+        document.getElementById(view+'View').classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(i=>i.classList.toggle('active',i.dataset.view===view));
+        if(view==='calendar') renderWorkCalendar();
+        if(view==='girlCalendar'){ renderGirlCalendar(); if(girlCurrentMode==='important') renderImportantList(); }
+        if(view==='bookkeeping') refreshBookkeepingUI();
+        haptic();
+      }
+
+      function initAll(){
+        loadAll();
+        updatePasswordLockStatus();
+        document.getElementById('themeDefaultBtn').onclick=()=>setTheme('default');
+        document.getElementById('themeMintBtn').onclick=()=>setTheme('mint');
+        document.getElementById('themeSkyBtn').onclick=()=>setTheme('sky');
+        
+        for(let y=new Date().getFullYear()-5;y<=new Date().getFullYear()+5;y++) document.getElementById('workYearSelect').add(new Option(y,y));
+        document.getElementById('workYearSelect').value=workDisplayYear;
+        for(let m=1;m<=12;m++) document.getElementById('workMonthSelect').add(new Option(m,m));
+        document.getElementById('workMonthSelect').value=workDisplayMonth+1;
+        document.getElementById('workYearSelect').onchange=()=>{ workDisplayYear=parseInt(document.getElementById('workYearSelect').value); renderWorkCalendar(); };
+        document.getElementById('workMonthSelect').onchange=()=>{ workDisplayMonth=parseInt(document.getElementById('workMonthSelect').value)-1; renderWorkCalendar(); };
+        renderCategoryList(); renderCategorySelect(); renderWorkCalendar();
+        document.getElementById('addWorkRecordBtn').onclick = addWorkRecordFromForm;
+        document.getElementById('addCategoryBtn').onclick = addNewCategory;
+        const collapseHeader = document.getElementById('collapseHeader');
+        const collapseContent = document.getElementById('collapseContent');
+        collapseHeader.onclick = () => collapseContent.classList.toggle('show');
+        document.getElementById('closeModalBtn').onclick=closeModal;
+        document.getElementById('dayModal').onclick=e=>{ if(e.target===document.getElementById('dayModal')) closeModal(); };
+        initGirlCalendar();
+        document.getElementById('prevMonthBk').onclick=()=>changeBkMonth(-1);
+        document.getElementById('nextMonthBk').onclick=()=>changeBkMonth(1);
+        document.getElementById('addBkBtn').onclick=addBookkeeping;
+        document.getElementById('manageRecordsBtn').onclick=showRecordModal;
+        document.getElementById('closeRecordModalBtn').onclick=()=>document.getElementById('recordModal').classList.remove('show');
+        document.querySelectorAll('#bkTypeToggle .type-btn').forEach(btn=>btn.addEventListener('click',()=>{
+          document.querySelectorAll('#bkTypeToggle .type-btn').forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active');
+          currentBkType=btn.dataset.type;
+          renderBkCategoryGrid();
+        }));
+        renderBkCategoryGrid(); refreshBookkeepingUI();
+        renderNoteCategories(); renderNoteCards(); 
+        if(currentNoteId) loadNoteToEditor(); else { document.getElementById('noteTitleInput').value = ''; document.getElementById('noteEditor').innerHTML = ''; }
+        document.getElementById('newNoteBtn').onclick=newNote;
+        document.getElementById('saveNoteBtn').onclick=saveCurrentNote;
+        renderTodoCategories(); renderTodoItems();
+        document.getElementById('addTodoBtn').onclick=addNewTodo;
+        bindNoteToolbar();
+        const noteTabBtns = document.querySelectorAll('.note-tab');
+        const notePanel = document.getElementById('notePanel');
+        const todoPanel = document.getElementById('todoPanel');
+        noteTabBtns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            noteTabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if(tab === 'note'){
+              notePanel.classList.add('active');
+              todoPanel.classList.remove('active');
+              renderNoteCards();
+            } else {
+              notePanel.classList.remove('active');
+              todoPanel.classList.add('active');
+              renderTodoCategories(); renderTodoItems();
+            }
+          });
         });
-      });
-      document.querySelectorAll('.nav-item').forEach(item=>item.addEventListener('click',()=>switchView(item.dataset.view)));
-      document.getElementById('exportDataBtn').onclick=()=>{ const data={records,workCategories,bkRecords,notes:{categories:noteCategories,notes},todoCategories,todos,menstrualData,cycleLength,periodDays,importantDays}; const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'})); a.download=`backup_${Date.now()}.json`; a.click(); };
-      document.getElementById('importDataBtn').onclick=()=>{ const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json'; inp.onchange=e=>{ const f=e.target.files[0]; const reader=new FileReader(); reader.onload=ev=>{ const d=JSON.parse(ev.target.result); if(d.records) records=d.records; if(d.workCategories) workCategories=d.workCategories; if(d.bkRecords) bkRecords=d.bkRecords; if(d.notes){ noteCategories=d.notes.categories||noteCategories; notes=d.notes.notes||notes; } if(d.todoCategories) todoCategories=d.todoCategories; if(d.todos) todos=d.todos; if(d.menstrualData) menstrualData=d.menstrualData; if(d.cycleLength) cycleLength=d.cycleLength; if(d.periodDays) periodDays=d.periodDays; if(d.importantDays) importantDays=d.importantDays; saveAll(); renderWorkCalendar(); refreshBookkeepingUI(); renderNoteCategories(); renderNoteCards(); loadNoteToEditor(); renderTodoCategories(); renderTodoItems(); initGirlCalendar(); alert('导入成功'); }; reader.readAsText(f); }; inp.click(); };
-      document.getElementById('clearAllDataBtn').onclick=confirmClearAllData;
-      document.getElementById('togglePasswordLockBtn').onclick=()=>{ let pwd=prompt('设置6位数字密码'); if(pwd&&/^\d{6}$/.test(pwd)){ savedPassword=pwd; passwordEnabled=true; saveAll(); isUnlocked=false; updatePasswordLockStatus(); alert('密码已启用'); showLock(); } else alert('密码必须为6位数字'); };
-      document.getElementById('disablePasswordLockBtn').onclick=()=>{ passwordEnabled=false; saveAll(); isUnlocked=true; updatePasswordLockStatus(); alert('密码锁已关闭'); };
-      if(passwordEnabled && !isUnlocked) showLock();
-    }
-    initAll();
-  })();
-</script>
+        document.querySelectorAll('.nav-item').forEach(item=>item.addEventListener('click',()=>switchView(item.dataset.view)));
+        document.getElementById('exportDataBtn').onclick=()=>{ const data={records,workCategories,bkRecords,notes:{categories:noteCategories,notes},todoCategories,todos,menstrualData,cycleLength,periodDays,importantDays}; const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'})); a.download=`backup_${Date.now()}.json`; a.click(); };
+        document.getElementById('importDataBtn').onclick=()=>{ const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json'; inp.onchange=e=>{ const f=e.target.files[0]; const reader=new FileReader(); reader.onload=ev=>{ const d=JSON.parse(ev.target.result); if(d.records) records=d.records; if(d.workCategories) workCategories=d.workCategories; if(d.bkRecords) bkRecords=d.bkRecords; if(d.notes){ noteCategories=d.notes.categories||noteCategories; notes=d.notes.notes||notes; } if(d.todoCategories) todoCategories=d.todoCategories; if(d.todos) todos=d.todos; if(d.menstrualData) menstrualData=d.menstrualData; if(d.cycleLength) cycleLength=d.cycleLength; if(d.periodDays) periodDays=d.periodDays; if(d.importantDays) importantDays=d.importantDays; saveAll(); renderWorkCalendar(); refreshBookkeepingUI(); renderNoteCategories(); renderNoteCards(); loadNoteToEditor(); renderTodoCategories(); renderTodoItems(); initGirlCalendar(); alert('导入成功'); }; reader.readAsText(f); }; inp.click(); };
+        document.getElementById('clearAllDataBtn').onclick=confirmClearAllData;
+        document.getElementById('togglePasswordLockBtn').onclick=()=>{ let pwd=prompt('设置6位数字密码'); if(pwd&&/^\d{6}$/.test(pwd)){ savedPassword=pwd; passwordEnabled=true; saveAll(); isUnlocked=false; updatePasswordLockStatus(); alert('密码已启用'); showLock(); } else alert('密码必须为6位数字'); };
+        document.getElementById('disablePasswordLockBtn').onclick=()=>{ passwordEnabled=false; saveAll(); isUnlocked=true; updatePasswordLockStatus(); alert('密码锁已关闭'); };
+        if(passwordEnabled && !isUnlocked) showLock();
+      }
+      initAll();
+    })();
+  </script>
 </body>
 </html>
