@@ -201,24 +201,19 @@
       min-width: 120px;
       text-align: center;
     }
-    /* 工时添加区域：分类框长度不变，工时框缩短三分之一 */
+    /* 工时添加区域 - 两控件等宽并排，不溢出 */
     .inline-form-row {
       display: flex;
       gap: 12px;
       align-items: center;
       margin-bottom: 12px;
     }
-    .inline-form-row select {
-      flex: 0 0 58%;   /* 分类下拉框占58%，保持原有长度 */
-      padding: 10px 12px;
-      border-radius: 60px;
-      border: 2px solid #f7ad6a;
-      background: white;
-      font-size: 0.9rem;
-    }
+    .inline-form-row select,
     .inline-form-row input {
-      flex: 0 0 35%;   /* 工时输入框占35%，比分类框短约三分之一（58%→35%） */
-      padding: 10px 12px;
+      flex: 1;           /* 等分剩余空间 */
+      min-width: 0;      /* 关键：允许缩小到内容宽度以下，防止溢出 */
+      width: auto;
+      padding: 10px 8px;
       border-radius: 60px;
       border: 2px solid #f7ad6a;
       background: white;
@@ -557,7 +552,7 @@
     yearlyChart = new Chart(ctx, { type: 'bar', data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets: [{ label:'收入', data:incomes, backgroundColor:'#2a7f4a' },{ label:'支出', data:expenses, backgroundColor:'#e06c3c' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ¥${ctx.raw.toFixed(2)}` } } } } });
     const tbody = document.getElementById('yearlyStatsTable').querySelector('tbody');
     let totalInc=0, totalExp=0;
-    tbody.innerHTML = monthly.map((m,i)=>{ const bal = m.income - m.expense; totalInc+=m.income; totalExp+=m.expense; return `<tr><td style="font-weight:600;">${i+1}月</td><td>¥${m.income.toFixed(2)}</td><td>¥${m.expense.toFixed(2)}</td><td style="color:${bal>=0?'#2a7f4a':'#e06c3c'}">¥${bal.toFixed(2)}</td>`; }).join('');
+    tbody.innerHTML = monthly.map((m,i)=>{ const bal = m.income - m.expense; totalInc+=m.income; totalExp+=m.expense; return `<tr><td style="font-weight:600;">${i+1}月</td><td>¥${m.income.toFixed(2)}</td><td>¥${m.expense.toFixed(2)}</td><td style="color:${bal>=0?'#2a7f4a':'#e06c3c'}">¥${bal.toFixed(2)}</td></tr>`; }).join('');
     document.getElementById('yearlyTotalSpan').innerHTML = `💰 全年收入: ¥${totalInc.toFixed(2)}   💸 全年支出: ¥${totalExp.toFixed(2)}   📊 总结余: ¥${(totalInc-totalExp).toFixed(2)}`;
     document.getElementById('yearlyStatsModal').classList.add('show');
   }
