@@ -169,9 +169,39 @@
     .day-cell.period-day { background: #ffe0f0; border-color: #ffb7c5; }
     .day-cell.ovulation-day { background: #fff0e0; border-color: #ffce9e; }
     .day-cell.predict-day { border: 2px dashed #ff9a8b; background: #fff9f0; }
-    .month-nav-arrows { display: flex; justify-content: center; gap: 24px; margin: 8px 0 12px 0; }
-    .month-arrow { background: #ffefdb; border: 2px solid #f7ad6a; border-radius: 40px; width: 40px; height: 40px; font-size: 1.2rem; font-weight: bold; cursor: pointer; color: var(--stat-label); transition: transform 0.1s; }
+    .month-nav-arrows {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin: 8px 0 12px 0;
+    }
+    .month-arrow {
+      background: #ffefdb;
+      border: 2px solid #f7ad6a;
+      border-radius: 40px;
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      color: var(--stat-label);
+      transition: transform 0.1s;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+    }
     .month-arrow:active { transform: scale(0.95); }
+    .current-month-display {
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--stat-label);
+      background: #fff0df;
+      padding: 6px 12px;
+      border-radius: 60px;
+      min-width: 120px;
+      text-align: center;
+    }
     .note-year-group { margin-bottom: 16px; }
     .note-year-header { background: #ffefdb; border-radius: 28px; padding: 8px 12px; font-weight: 800; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--stat-label); margin-bottom: 8px; }
     .note-year-notes { display: flex; flex-direction: column; gap: 8px; padding-left: 8px; }
@@ -217,6 +247,7 @@
     .data-table { width: 100%; border-collapse: collapse; background: #fffaf0; border-radius: 24px; }
     .data-table th, .data-table td { padding: 12px 6px; text-align: center; vertical-align: middle; border-bottom: 1px solid #ffd8b5; font-size: 0.8rem; }
     .data-table th { background: #ffefdb; color: var(--stat-label); font-weight: 800; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #ffce9e; }
+    /* 女生日历弹窗样式（按钮大小、对齐） */
     .period-modal-content {
       background: #fff6e8;
       border-radius: 44px;
@@ -233,20 +264,71 @@
       font-size: 20px;
       font-weight: 800;
     }
-    .period-modal-content button {
-      font-size: 16px !important;
-      padding: 10px 18px !important;
-      margin-right: 8px;
-      margin-bottom: 8px;
+    .symptom-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 12px 0;
     }
-    .symptom-buttons .symptom-btn {
-      font-size: 15px;
+    .symptom-btn {
+      background: #fff0df;
+      border: 2px solid #f7ad6a;
+      border-radius: 40px;
       padding: 8px 18px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.1s;
+      color: #1e1e2f;
+    }
+    .symptom-btn.active {
+      background: #f3bc7c;
+      border-color: #b45a2b;
+      color: white;
+    }
+    .period-modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      justify-content: flex-end;
     }
     .period-modal-buttons button {
-      font-size: 16px;
-      padding: 10px 20px;
+      background: none;
+      border-radius: 60px;
+      padding: 6px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.1s;
+      border: 2px solid #f7ad6a;
     }
+    .period-modal-buttons button:first-child {
+      background: #b8e0b0;
+    }
+    .period-modal-buttons button:last-child {
+      background: #ffefdb;
+    }
+    .period-modal-content > button {
+      font-size: 16px;
+      padding: 8px 16px;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      border-radius: 40px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #setAsStartBtn, #setAsEndBtn, #togglePeriodBtn {
+      font-size: 16px;
+      padding: 8px 16px;
+      border-radius: 40px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #setAsStartBtn { background: #b8e0b0; }
+    #setAsEndBtn { background: #ffd966; }
+    #togglePeriodBtn { background: #ffefdb; }
     .expand-important-btn { background: linear-gradient(135deg, #FFB27A, #FF8C42); border: none; border-radius: 60px; padding: 10px 20px; font-weight: 800; color: white; margin-bottom: 16px; width: 100%; cursor: pointer; }
   </style>
 </head>
@@ -298,16 +380,25 @@
       <div id="girlPeriodPanel" class="menstrual-panel">
         <div class="menstrual-settings-card"><div class="menstrual-row"><div class="setting-item"><label>🔄 周期长度</label><input type="number" id="girlCycleLength" value="28" min="21" max="40"><span>天</span></div><div class="setting-item"><label>📅 经期持续</label><input type="number" id="girlPeriodDays" value="7" min="3" max="10"><span>天</span></div></div><button id="saveGirlMenstrualBtn" class="save-menstrual-btn">💾 保存设置</button></div>
         <div class="collapse-panel"><div class="collapse-header" id="cycleStatsHeader">📊 周期统计与预测 <span>▼</span></div><div class="collapse-content show" id="cycleStatsContent"><div id="cycleStatsHtml" style="line-height:1.6; font-size:0.9rem;"></div></div></div>
-        <div class="month-nav-arrows"><button class="month-arrow" id="girlPrevMonthBtn">←</button><button class="month-arrow" id="girlNextMonthBtn">→</button></div>
+        <!-- 箭头 + 月份显示 -->
+        <div class="month-nav-arrows">
+          <button class="month-arrow" id="girlPrevMonthBtn">←</button>
+          <span class="current-month-display" id="girlCurrentMonthDisplay"></span>
+          <button class="month-arrow" id="girlNextMonthBtn">→</button>
+        </div>
         <div class="weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
         <div class="calendar-grid" id="girlCalendarGrid"></div>
-        <div style="margin-top:8px; font-size:0.7rem; text-align:center; color:#d46b3e;">🌸经期 💧排卵期 🔚结束日</div>
+        <div style="margin-top:8px; font-size:0.7rem; text-align:center; color:#d46b3e;">🌸经期 ❗有症状 💧排卵期 🔚结束日</div>
       </div>
       <div id="girlImportantPanel" class="important-panel" style="display:none;">
         <div class="important-list-area" id="girlImportantList"></div>
         <button id="toggleImportantFormBtn" class="expand-important-btn">➕ 添加重要节日</button>
         <div id="importantFormContainer" class="important-form"><div class="imp-form-row"><input type="text" id="girlImpTitle" placeholder="标题"><input type="date" id="girlImpDate"></div><div class="imp-check-row"><label><input type="checkbox" id="girlImpRepeat"> 每年重复</label></div><div class="imp-form-row"><button id="addGirlImportantBtn" class="add-btn">➕ 添加</button></div></div>
-        <div class="month-nav-arrows"><button class="month-arrow" id="girlImportantPrevMonthBtn">←</button><button class="month-arrow" id="girlImportantNextMonthBtn">→</button></div>
+        <div class="month-nav-arrows">
+          <button class="month-arrow" id="girlImportantPrevMonthBtn">←</button>
+          <span class="current-month-display" id="girlImportantCurrentMonthDisplay"></span>
+          <button class="month-arrow" id="girlImportantNextMonthBtn">→</button>
+        </div>
         <div class="weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
         <div class="calendar-grid" id="girlImportantCalendarGrid"></div>
       </div>
@@ -741,6 +832,9 @@
     for(let i=0;i<remaining;i++) cells.push(buildGirlPeriodCell(y,m,0,true));
     document.getElementById('girlCalendarGrid').innerHTML = cells.join('');
     document.querySelectorAll('#girlCalendarGrid .day-cell:not(.empty)').forEach(cell=>{ cell.addEventListener('click',()=>{ const dateKey = cell.dataset.date; if(dateKey) onPeriodDateClick(dateKey); }); });
+    // 更新月份显示
+    const monthDisplay = document.getElementById('girlCurrentMonthDisplay');
+    if(monthDisplay) monthDisplay.innerText = `${girlDisplayYear}年 ${girlDisplayMonth+1}月`;
   }
   function buildGirlPeriodCell(y,m,d,isPlaceholder, ovuSet, predictSet){
     if(isPlaceholder) return `<div class="day-cell empty"><div class="day-number"></div></div>`;
@@ -758,6 +852,7 @@
     if(styleClass) classes += ' ' + styleClass;
     let icons = [];
     if(isPeriod) icons.push('🌸');
+    if(isPeriod && menstrualData[key]?.symptoms?.length > 0) icons.push('❗');
     if(isOvulation) icons.push('💧');
     if(isPeriod){
       const tomorrow = new Date(y,m,d+1);
@@ -772,7 +867,24 @@
     const existing = menstrualData[dateKey] || { isPeriod: false, symptoms: [] };
     const modal = document.createElement('div'); modal.className='lock-overlay'; modal.style.zIndex='3000';
     const isCurrentlyPeriod = existing.isPeriod;
-    modal.innerHTML = `<div class="period-modal-content"><h4>🌸 生理期标记 - ${dateKey}</h4><button id="setAsStartBtn" style="background:#b8e0b0; border:none; border-radius:40px; padding:10px 18px; margin-right:8px; font-size:16px;">设为月经开始</button><button id="setAsEndBtn" style="background:#ffd966; border:none; border-radius:40px; padding:10px 18px; margin-right:8px; font-size:16px;">设为经期结束</button><button id="togglePeriodBtn" style="background:#ffefdb; border:none; border-radius:40px; padding:10px 18px; font-size:16px;">${isCurrentlyPeriod ? '取消经期' : '标记为经期'}</button><div style="margin:12px 0;">症状</div><div class="symptom-buttons">${['疲劳','腹痛','头痛'].map(s => `<button type="button" class="symptom-btn ${existing.symptoms.includes(s)?'active':''}" data-symptom="${s}">${s}</button>`).join('')}</div><div class="period-modal-buttons"><button id="savePeriodBtn" style="background:#b8e0b0;">保存</button><button id="cancelPeriodBtn" style="background:#ffefdb;">取消</button></div></div>`;
+    modal.innerHTML = `
+      <div class="period-modal-content">
+        <h4>🌸 生理期标记 - ${dateKey}</h4>
+        <div>
+          <button id="setAsStartBtn" style="background:#b8e0b0;">设为月经开始</button>
+          <button id="setAsEndBtn" style="background:#ffd966;">设为经期结束</button>
+          <button id="togglePeriodBtn" style="background:#ffefdb;">${isCurrentlyPeriod ? '取消经期' : '标记为经期'}</button>
+        </div>
+        <div style="margin:12px 0;">症状</div>
+        <div class="symptom-buttons">
+          ${['疲劳','腹痛','头痛'].map(s => `<button type="button" class="symptom-btn ${existing.symptoms.includes(s)?'active':''}" data-symptom="${s}">${s}</button>`).join('')}
+        </div>
+        <div class="period-modal-buttons">
+          <button id="savePeriodBtn">保存</button>
+          <button id="cancelPeriodBtn">取消</button>
+        </div>
+      </div>
+    `;
     document.body.appendChild(modal);
     const btns = modal.querySelectorAll('.symptom-btn');
     btns.forEach(btn=>btn.addEventListener('click',()=> btn.classList.toggle('active')));
@@ -867,6 +979,8 @@
     for(let i=0;i<remaining;i++) cells.push(`<div class="day-cell empty"><div class="day-number"></div></div>`);
     document.getElementById('girlImportantCalendarGrid').innerHTML = cells.join('');
     document.querySelectorAll('#girlImportantCalendarGrid .day-cell:not(.empty)').forEach(cell=>{ cell.addEventListener('click',()=>{ const date = cell.dataset.date; if(date) onImportantClick(date); }); });
+    const monthDisplay = document.getElementById('girlImportantCurrentMonthDisplay');
+    if(monthDisplay) monthDisplay.innerText = `${girlDisplayYear}年 ${girlDisplayMonth+1}月`;
   }
   function buildGirlImportantCell(y,m,d){
     const key = formatDateKey(y,m,d);
