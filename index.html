@@ -202,6 +202,25 @@
       min-width: 120px;
       text-align: center;
     }
+    /* 工时添加区域新样式 */
+    .inline-form-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .inline-form-row select, .inline-form-row input {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 60px;
+      border: 2px solid #f7ad6a;
+      background: white;
+      font-size: 0.9rem;
+    }
+    .add-work-card .add-btn {
+      width: 100%;
+      margin-top: 0;
+    }
     .note-year-group { margin-bottom: 16px; }
     .note-year-header { background: #ffefdb; border-radius: 28px; padding: 8px 12px; font-weight: 800; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--stat-label); margin-bottom: 8px; }
     .note-year-notes { display: flex; flex-direction: column; gap: 8px; padding-left: 8px; }
@@ -247,7 +266,6 @@
     .data-table { width: 100%; border-collapse: collapse; background: #fffaf0; border-radius: 24px; }
     .data-table th, .data-table td { padding: 12px 6px; text-align: center; vertical-align: middle; border-bottom: 1px solid #ffd8b5; font-size: 0.8rem; }
     .data-table th { background: #ffefdb; color: var(--stat-label); font-weight: 800; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #ffce9e; }
-    /* 女生日历弹窗样式（按钮大小、对齐） */
     .period-modal-content {
       background: #fff6e8;
       border-radius: 44px;
@@ -367,7 +385,14 @@
       <div class="weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
       <div class="calendar-grid" id="calendarGrid"></div>
       <button class="manage-btn" id="manageWorkRecordsBtn" style="margin-top:16px;">📋 管理本月记录</button>
-      <div class="add-work-card"><div class="selected-date-info" id="selectedDateDisplay">请点击日历选中日期</div><div class="work-form-row"><label>📂 分类</label><select id="workCategorySelect"></select></div><div class="work-form-row"><label>⏱️ 工时</label><input type="number" id="workHoursInput" step="0.5" placeholder="小时"></div><div class="work-form-row"><label>💰 时薪</label><input type="number" id="workRateInput" step="0.5" placeholder="时薪" value="19.0"></div><button class="add-btn" id="addWorkRecordBtn">➕ 添加记录</button></div>
+      <div class="add-work-card">
+        <div class="selected-date-info" id="selectedDateDisplay">请点击日历选中日期</div>
+        <div class="inline-form-row">
+          <select id="workCategorySelect"></select>
+          <input type="number" id="workHoursInput" step="0.5" placeholder="工时(小时)">
+        </div>
+        <button class="add-btn" id="addWorkRecordBtn">➕ 添加记录</button>
+      </div>
     </div>
   </div>
 
@@ -380,7 +405,6 @@
       <div id="girlPeriodPanel" class="menstrual-panel">
         <div class="menstrual-settings-card"><div class="menstrual-row"><div class="setting-item"><label>🔄 周期长度</label><input type="number" id="girlCycleLength" value="28" min="21" max="40"><span>天</span></div><div class="setting-item"><label>📅 经期持续</label><input type="number" id="girlPeriodDays" value="7" min="3" max="10"><span>天</span></div></div><button id="saveGirlMenstrualBtn" class="save-menstrual-btn">💾 保存设置</button></div>
         <div class="collapse-panel"><div class="collapse-header" id="cycleStatsHeader">📊 周期统计与预测 <span>▼</span></div><div class="collapse-content show" id="cycleStatsContent"><div id="cycleStatsHtml" style="line-height:1.6; font-size:0.9rem;"></div></div></div>
-        <!-- 箭头 + 月份显示 -->
         <div class="month-nav-arrows">
           <button class="month-arrow" id="girlPrevMonthBtn">←</button>
           <span class="current-month-display" id="girlCurrentMonthDisplay"></span>
@@ -426,8 +450,8 @@
 <div class="modal-overlay" id="dayModal"><div class="modal-sheet"><div style="display:flex; justify-content:space-between;"><span id="modalDateTitle"></span><button id="closeModalBtn" style="background:none; border:none; font-size:1.5rem;">✕</button></div><div id="recordsListContainer"></div><div id="editFormContainer"></div></div></div>
 
 <script>
-// 完整功能代码（含记账、工时、女生日历优化、笔记、待办、设置、密码锁等）
 (function(){
+  // 存储KEY
   const STORAGE_KEY = 'dopa_work_v17';
   const BK_STORAGE_KEY = 'dopa_bookkeeping_v8';
   const NOTE_STORAGE_KEY = 'dopa_note_v5';
@@ -514,7 +538,7 @@
     localStorage.setItem(PASSWORD_KEY, savedPassword);
   }
 
-  // 记账年度统计弹窗
+  // 记账相关函数（保持原有）
   function showYearlyStats(){
     const year = currentBkYear;
     document.getElementById('yearlyStatsYear').innerText = year;
@@ -526,7 +550,7 @@
     yearlyChart = new Chart(ctx, { type: 'bar', data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets: [{ label:'收入', data:incomes, backgroundColor:'#2a7f4a' },{ label:'支出', data:expenses, backgroundColor:'#e06c3c' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ¥${ctx.raw.toFixed(2)}` } } } } });
     const tbody = document.getElementById('yearlyStatsTable').querySelector('tbody');
     let totalInc=0, totalExp=0;
-    tbody.innerHTML = monthly.map((m,i)=>{ const bal = m.income - m.expense; totalInc+=m.income; totalExp+=m.expense; return `<tr><td style="font-weight:600;">${i+1}月</td><td>¥${m.income.toFixed(2)}</td><td>¥${m.expense.toFixed(2)}</td><td style="color:${bal>=0?'#2a7f4a':'#e06c3c'}">¥${bal.toFixed(2)}</td></tr>`; }).join('');
+    tbody.innerHTML = monthly.map((m,i)=>{ const bal = m.income - m.expense; totalInc+=m.income; totalExp+=m.expense; return `<tr><td style="font-weight:600;">${i+1}月</td><td>¥${m.income.toFixed(2)}</td><td>¥${m.expense.toFixed(2)}</td><td style="color:${bal>=0?'#2a7f4a':'#e06c3c'}">¥${bal.toFixed(2)}</td>`; }).join('');
     document.getElementById('yearlyTotalSpan').innerHTML = `💰 全年收入: ¥${totalInc.toFixed(2)}   💸 全年支出: ¥${totalExp.toFixed(2)}   📊 总结余: ¥${(totalInc-totalExp).toFixed(2)}`;
     document.getElementById('yearlyStatsModal').classList.add('show');
   }
@@ -557,6 +581,8 @@
       container.innerHTML = html;
     }
   }
+
+  // 工时年度汇总（新增合计行）
   function renderWorkYearlySummary(){
     const mode = workChartMode;
     const container = document.getElementById('workTableContainer');
@@ -566,8 +592,10 @@
       for(let m=0;m<12;m++){ const dim = getDaysInMonth(year,m);
         for(let d=1; d<=dim; d++){ const key = formatDateKey(year,m,d); (records[key]||[]).forEach(r=>{ monthly[m].income += r.income; }); }
       }
+      let totalYear = monthly.reduce((sum,m)=>sum+m.income,0);
       let html = '<table class="data-table"><thead><tr><th>月份</th><th>收入(¥)</th></tr></thead><tbody>';
       for(let i=0;i<12;i++) html += `<tr><td style="font-weight:600;">${i+1}月</td><td>${monthly[i].income.toFixed(2)}</td></tr>`;
+      html += `<tr style="background:#ffefdb; font-weight:800;"><td>全年合计</td><td>${totalYear.toFixed(2)}</td></tr>`;
       html += '</tbody></table>';
       container.innerHTML = html;
     } else {
@@ -576,12 +604,15 @@
       if(startYear > endYear) { [startYear, endYear] = [endYear, startYear]; document.getElementById('workYearStartSelect').value = startYear; document.getElementById('workYearEndSelect').value = endYear; }
       let years = []; for(let y=startYear; y<=endYear; y++) years.push(y);
       const yearData = years.map(y=>{ let totalInc=0; for(let m=0;m<12;m++){ const dim = getDaysInMonth(y,m); for(let d=1; d<=dim; d++){ const key = formatDateKey(y,m,d); (records[key]||[]).forEach(r=>{ totalInc += r.income; }); } } return { year:y, income:totalInc }; });
+      let totalAll = yearData.reduce((sum,item)=>sum+item.income,0);
       let html = '<table class="data-table"><thead><tr><th>年份</th><th>总收入(¥)</th></tr></thead><tbody>';
       yearData.forEach(d=>{ html += `<tr><td style="font-weight:600;">${d.year}</td><td>${d.income.toFixed(2)}</td></tr>`; });
+      html += `<tr style="background:#ffefdb; font-weight:800;"><td>总计</td><td>${totalAll.toFixed(2)}</td></tr>`;
       html += '</tbody></table>';
       container.innerHTML = html;
     }
   }
+
   function getWorkMonthlySummary(year, month){
     const daysInMonth = getDaysInMonth(year,month);
     let totalHours=0, totalIncome=0;
@@ -635,7 +666,7 @@
   function renderCategorySelect(){
     const select = document.getElementById('workCategorySelect');
     select.innerHTML = '<option value="">-- 选择分类 --</option>' + workCategories.map(cat => `<option value="${cat.id}" data-rate="${cat.hourlyRate}">${escapeHtml(cat.name)} (¥${cat.hourlyRate}/h)</option>`).join('');
-    select.onchange = () => { const selected = select.options[select.selectedIndex]; const rate = selected.getAttribute('data-rate'); if(rate) document.getElementById('workRateInput').value = rate; };
+    // 不再需要设置时薪输入框，因为已移除
   }
   function addNewCategory(){
     const name = document.getElementById('newCategoryName').value.trim();
@@ -688,9 +719,10 @@
     const categoryId = document.getElementById('workCategorySelect').value;
     if(!categoryId){ alert('请选择分类'); return; }
     const hours = parseFloat(document.getElementById('workHoursInput').value);
-    let rate = parseFloat(document.getElementById('workRateInput').value);
     if(isNaN(hours)||hours<=0){ alert('有效工时'); return; }
-    if(isNaN(rate)||rate<=0){ alert('有效时薪'); return; }
+    const selectedOption = document.getElementById('workCategorySelect').options[document.getElementById('workCategorySelect').selectedIndex];
+    const rate = parseFloat(selectedOption.getAttribute('data-rate'));
+    if(isNaN(rate)||rate<=0){ alert('所选分类时薪无效'); return; }
     const key = currentSelectedWorkDate;
     const newRecord = { id: Date.now()+''+Math.random(), categoryId, hours, rate, income: hours*rate };
     let arr = records[key] || [];
@@ -728,7 +760,7 @@
     document.getElementById('workRecordsModal').classList.add('show');
   }
 
-  // 女生日历 - 经期预测与联动
+  // 女生日历（保持完整）
   function getPeriodStartDates(){
     const starts = [];
     const periodDates = Object.keys(menstrualData).filter(k=>menstrualData[k]?.isPeriod).sort();
@@ -832,7 +864,6 @@
     for(let i=0;i<remaining;i++) cells.push(buildGirlPeriodCell(y,m,0,true));
     document.getElementById('girlCalendarGrid').innerHTML = cells.join('');
     document.querySelectorAll('#girlCalendarGrid .day-cell:not(.empty)').forEach(cell=>{ cell.addEventListener('click',()=>{ const dateKey = cell.dataset.date; if(dateKey) onPeriodDateClick(dateKey); }); });
-    // 更新月份显示
     const monthDisplay = document.getElementById('girlCurrentMonthDisplay');
     if(monthDisplay) monthDisplay.innerText = `${girlDisplayYear}年 ${girlDisplayMonth+1}月`;
   }
@@ -867,24 +898,7 @@
     const existing = menstrualData[dateKey] || { isPeriod: false, symptoms: [] };
     const modal = document.createElement('div'); modal.className='lock-overlay'; modal.style.zIndex='3000';
     const isCurrentlyPeriod = existing.isPeriod;
-    modal.innerHTML = `
-      <div class="period-modal-content">
-        <h4>🌸 生理期标记 - ${dateKey}</h4>
-        <div>
-          <button id="setAsStartBtn" style="background:#b8e0b0;">设为月经开始</button>
-          <button id="setAsEndBtn" style="background:#ffd966;">设为经期结束</button>
-          <button id="togglePeriodBtn" style="background:#ffefdb;">${isCurrentlyPeriod ? '取消经期' : '标记为经期'}</button>
-        </div>
-        <div style="margin:12px 0;">症状</div>
-        <div class="symptom-buttons">
-          ${['疲劳','腹痛','头痛'].map(s => `<button type="button" class="symptom-btn ${existing.symptoms.includes(s)?'active':''}" data-symptom="${s}">${s}</button>`).join('')}
-        </div>
-        <div class="period-modal-buttons">
-          <button id="savePeriodBtn">保存</button>
-          <button id="cancelPeriodBtn">取消</button>
-        </div>
-      </div>
-    `;
+    modal.innerHTML = `<div class="period-modal-content"><h4>🌸 生理期标记 - ${dateKey}</h4><div><button id="setAsStartBtn" style="background:#b8e0b0;">设为月经开始</button><button id="setAsEndBtn" style="background:#ffd966;">设为经期结束</button><button id="togglePeriodBtn" style="background:#ffefdb;">${isCurrentlyPeriod ? '取消经期' : '标记为经期'}</button></div><div style="margin:12px 0;">症状</div><div class="symptom-buttons">${['疲劳','腹痛','头痛'].map(s => `<button type="button" class="symptom-btn ${existing.symptoms.includes(s)?'active':''}" data-symptom="${s}">${s}</button>`).join('')}</div><div class="period-modal-buttons"><button id="savePeriodBtn">保存</button><button id="cancelPeriodBtn">取消</button></div></div>`;
     document.body.appendChild(modal);
     const btns = modal.querySelectorAll('.symptom-btn');
     btns.forEach(btn=>btn.addEventListener('click',()=> btn.classList.toggle('active')));
@@ -940,7 +954,7 @@
     document.querySelectorAll('.edit-period').forEach(btn=>btn.addEventListener('click',()=>{ const date = btn.dataset.date; onPeriodDateClick(date); }));
     document.querySelectorAll('.del-period').forEach(btn=>btn.addEventListener('click',()=>{ const startDate = btn.dataset.date; if(confirm(`删除从 ${startDate} 开始的整个经期记录？`)){ const start = new Date(startDate); for(let i=0;i<periodDays;i++){ const cur = new Date(start); cur.setDate(start.getDate()+i); const key = formatDateKey(cur.getFullYear(), cur.getMonth(), cur.getDate()); if(menstrualData[key]) delete menstrualData[key]; } saveAll(); renderGirlCalendarPeriod(); renderCycleStatsPanel(); } }));
   }
-  // 重要节日部分
+  // 重要节日
   const lunarInfo = [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04bd7,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0];
   function getLunarYearInfo(year){ return lunarInfo[year-1900]; }
   function getLunarMonthDays(year, month){ let bit = 0x10000 >> month; return (getLunarYearInfo(year) & bit) ? 30 : 29; }
