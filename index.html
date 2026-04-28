@@ -9,7 +9,6 @@
   <meta name="apple-mobile-web-app-title" content="全能生活本">
   <meta name="theme-color" content="#ffd9e8">
   <script>
-    // 生成彩虹图标 dataURL（粉色渐变 + 🌈）
     function generateIconDataURL(size) {
       const canvas = document.createElement('canvas');
       canvas.width = size;
@@ -202,17 +201,25 @@
       min-width: 120px;
       text-align: center;
     }
-    /* 工时添加区域新样式 */
+    /* 工时添加区域：分类框长度不变，工时框缩短三分之一 */
     .inline-form-row {
       display: flex;
       gap: 12px;
       align-items: center;
       margin-bottom: 12px;
     }
-    .inline-form-row select, .inline-form-row input {
-      flex: 1;
+    .inline-form-row select {
+      flex: 0 0 58%;   /* 分类下拉框占58%，保持原有长度 */
       padding: 10px 12px;
-      border-radius: 40px;
+      border-radius: 60px;
+      border: 2px solid #f7ad6a;
+      background: white;
+      font-size: 0.9rem;
+    }
+    .inline-form-row input {
+      flex: 0 0 35%;   /* 工时输入框占35%，比分类框短约三分之一（58%→35%） */
+      padding: 10px 12px;
+      border-radius: 60px;
       border: 2px solid #f7ad6a;
       background: white;
       font-size: 0.9rem;
@@ -666,7 +673,6 @@
   function renderCategorySelect(){
     const select = document.getElementById('workCategorySelect');
     select.innerHTML = '<option value="">-- 选择分类 --</option>' + workCategories.map(cat => `<option value="${cat.id}" data-rate="${cat.hourlyRate}">${escapeHtml(cat.name)} (¥${cat.hourlyRate}/h)</option>`).join('');
-    // 不再需要设置时薪输入框，因为已移除
   }
   function addNewCategory(){
     const name = document.getElementById('newCategoryName').value.trim();
