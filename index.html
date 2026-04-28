@@ -46,7 +46,7 @@
     appleIcon.href = icon180;
     document.head.appendChild(appleIcon);
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -331,6 +331,10 @@
       border-radius: 32px;
       padding: 12px;
       margin-bottom: 16px;
+      display: none; /* 初始隐藏，点击展开按钮后显示 */
+    }
+    .important-form.show {
+      display: block;
     }
     .imp-form-row {
       display: flex;
@@ -371,7 +375,7 @@
     }
     .important-days-number { font-size: 1.6rem; font-weight: 900; color: #fff0e0; line-height: 1; }
     .lunar-text { font-size: 0.65rem; font-weight: 600; color: #c06d4a; background: #fff0e0; border-radius: 24px; padding: 2px 4px; margin-top: 3px; }
-    /* 笔记模块 */
+    /* 笔记模块优化 */
     .note-year-group {
       margin-bottom: 16px;
     }
@@ -460,14 +464,41 @@
     .note-tab-panel { display: none; }
     .note-tab-panel.active { display: block; }
     .note-categories-bar { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 16px; }
-    .note-cat { background: #fff0df; border: 2px solid #f7ad6a; border-radius: 60px; padding: 4px 14px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+    .note-cat { background: #fff0df; border: 2px solid #f7ad6a; border-radius: 60px; padding: 6px 14px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
     .note-cat.active { background: var(--cat-active); color: white; border-color: #b45a2b; }
-    .note-editor-area { background: #fffef7; border-radius: 32px; border: 2px solid #ffbc7a; padding: 12px; margin-top: 12px; }
-    .note-header { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-    .note-title-input { flex:2; padding: 8px 12px; border-radius: 60px; border: 2px solid #f7a16b; background: white; font-weight: bold; }
-    .note-toolbar { background: #ffefdb; border-radius: 60px; padding: 6px; display: flex; gap: 6px; overflow-x: auto; margin-bottom: 12px; }
+    /* 笔记标题输入框增大高度（原约35px -> 增加一半约53px） */
+    .note-title-input {
+      padding: 14px 12px;
+      border-radius: 60px;
+      border: 2px solid #f7a16b;
+      background: white;
+      font-weight: bold;
+      font-size: 1rem;
+      flex: 2;
+      min-height: 52px;
+    }
+    /* 笔记编辑器高度翻倍 */
+    .note-editor {
+      min-height: 360px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      outline: none;
+      background: #fffef7;
+      border-radius: 24px;
+      border: 2px solid #ffbc7a;
+      padding: 12px;
+      margin-top: 8px;
+    }
+    .note-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .note-toolbar { background: #ffefdb; border-radius: 60px; padding: 6px; display: flex; gap: 6px; overflow-x: auto; margin-bottom: 8px; }
     .tool-icon { background: #fff2e2; border: none; border-radius: 40px; width: 32px; height: 32px; font-size: 1rem; cursor: pointer; flex-shrink: 0; }
-    .note-editor { min-height: 180px; font-size: 0.9rem; line-height: 1.4; outline: none; }
     .todo-categories { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 16px; }
     .cat-tab { background: #fff0df; border: 2px solid #f7ad6a; border-radius: 60px; padding: 4px 14px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
     .cat-tab.active { background: var(--cat-active); color: white; }
@@ -518,6 +549,66 @@
       text-align: center;
       vertical-align: middle;
     }
+    /* 生理期弹窗优化样式 */
+    .period-modal-content {
+      background: #fff6e8;
+      border-radius: 44px;
+      padding: 24px;
+      width: 320px;
+      max-width: 90%;
+      text-align: left;
+      color: #1e1e2f;
+    }
+    .period-modal-content h4 {
+      color: #1e1e2f;
+      margin-bottom: 16px;
+    }
+    .symptom-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
+    .symptom-btn {
+      background: #fff0df;
+      border: 2px solid #f7ad6a;
+      border-radius: 40px;
+      padding: 8px 16px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.1s;
+      color: #1e1e2f;
+    }
+    .symptom-btn.active {
+      background: #f3bc7c;
+      border-color: #b45a2b;
+      color: white;
+    }
+    .period-modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      justify-content: flex-end;
+    }
+    .period-modal-buttons button {
+      padding: 8px 16px;
+      border-radius: 60px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .expand-important-btn {
+      background: linear-gradient(135deg, #FFB27A, #FF8C42);
+      border: none;
+      border-radius: 60px;
+      padding: 10px 20px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 16px;
+      width: 100%;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -552,7 +643,7 @@
   </div>
 
   <!-- 记账年度统计弹窗 -->
-  <div id="yearlyStatsModal" class="record-modal"><div class="record-modal-content" style="max-width:500px;"><div style="display:flex; justify-content:space-between;"><span class="section-title">📊 年度统计</span><button id="closeYearlyModalBtn" style="background:none; border:none; font-size:1.5rem;">✕</button></div><div style="display:flex; justify-content:center; gap:12px;"><button class="month-btn" id="prevYearBtn">←</button><span id="yearlyStatsYear" style="font-weight:800;"></span><button class="month-btn" id="nextYearBtn">→</button></div><canvas id="yearlyBarChart" width="400" height="200"></canvas><div class="table-scroll"><table style="width:100%; border-collapse:collapse;" id="yearlyStatsTable"><thead><tr><th>月份</th><th>收入(¥)</th><th>支出(¥)</th><th>结余(¥)</th><tr></thead><tbody></tbody></table></div><div id="yearlyTotalSpan" style="text-align:center; font-weight:800; margin-top:12px;"></div></div></div>
+  <div id="yearlyStatsModal" class="record-modal"><div class="record-modal-content" style="max-width:500px;"><div style="display:flex; justify-content:space-between;"><span class="section-title">📊 年度统计</span><button id="closeYearlyModalBtn" style="background:none; border:none; font-size:1.5rem;">✕</button></div><div style="display:flex; justify-content:center; gap:12px;"><button class="month-btn" id="prevYearBtn">←</button><span id="yearlyStatsYear" style="font-weight:800;"></span><button class="month-btn" id="nextYearBtn">→</button></div><canvas id="yearlyBarChart" width="400" height="200"></canvas><div class="table-scroll"><table style="width:100%; border-collapse:collapse;" id="yearlyStatsTable"><thead><tr><th>月份</th><th>收入(¥)</th><th>支出(¥)</th><th>结余(¥)</th></tr></thead><tbody></tbody></table></div><div id="yearlyTotalSpan" style="text-align:center; font-weight:800; margin-top:12px;"></div></div></div>
 
   <!-- 记工时视图 -->
   <div id="calendarView" class="view">
@@ -573,7 +664,6 @@
       <div class="month-year-picker"><select id="workYearSelect"></select> 年 <select id="workMonthSelect"></select> 月</div>
       <div class="summary-card"><div class="summary-card-item"><div class="summary-card-label">💰 本月总收入</div><div class="summary-card-number" id="workTotalIncome">0</div></div><div class="summary-card-item"><div class="summary-card-label">⏱️ 总工时</div><div class="summary-card-number" id="workTotalHours">0</div></div></div>
       <div class="collapse-panel"><div class="collapse-header" id="collapseHeader">⚙️ 工时分类管理 <span>▼</span></div><div class="collapse-content" id="collapseContent"><div class="category-list" id="categoryList"></div><div class="add-category"><input type="text" id="newCategoryName" placeholder="新分类名称"><input type="number" id="newCategoryRate" placeholder="时薪"><button class="add-btn" id="addCategoryBtn">➕ 添加</button></div></div></div>
-      <!-- 饼状图尺寸与记账饼图一致 200x200 -->
       <div class="collapse-panel">
         <div class="collapse-header" id="pieChartHeader">📊 按分类工时占比 <span>▼</span></div>
         <div class="collapse-content" id="pieChartContent">
@@ -618,7 +708,9 @@
       </div>
       <div id="girlImportantPanel" class="important-panel" style="display:none;">
         <div class="important-list-area" id="girlImportantList"></div>
-        <div class="important-form">
+        <!-- 展开/收起按钮 -->
+        <button id="toggleImportantFormBtn" class="expand-important-btn">➕ 添加重要节日</button>
+        <div id="importantFormContainer" class="important-form">
           <div class="imp-form-row"><input type="text" id="girlImpTitle" placeholder="标题"><input type="date" id="girlImpDate"></div>
           <div class="imp-check-row"><label><input type="checkbox" id="girlImpRepeat"> 每年重复</label></div>
           <div class="imp-form-row"><button id="addGirlImportantBtn" class="add-btn">➕ 添加</button></div>
@@ -942,7 +1034,12 @@
   function buildWorkCell(y,m,d){
     const key=formatDateKey(y,m,d); const sum=getDaySummary(key); const today=new Date(); const isToday=(y===today.getFullYear() && m===today.getMonth() && d===today.getDate());
     const cls = `day-cell ${isToday?'today':''}`;
-    let bottom = (sum.hours>0||sum.income>0)?`<div class="day-hours">${sum.hours.toFixed(1)}h</div><div class="day-income">¥${sum.income.toFixed(1)}</div>`:`<div class="empty-indicator">✨</div>`;
+    let bottom = '';
+    if(sum.hours>0){
+      bottom = `<div class="day-hours">${sum.hours.toFixed(1)}h</div><div class="day-income">¥${sum.income.toFixed(1)}</div>`;
+    } else {
+      bottom = `<div class="empty-indicator">✨</div>`;
+    }
     return `<div class="${cls}" data-date="${key}"><div class="day-number">${d}</div>${bottom}</div>`;
   }
   function addWorkRecordFromForm(){
@@ -1049,12 +1146,26 @@
   function onPeriodClick(dateKey){
     const existing = menstrualData[dateKey] || { isPeriod: false, symptoms: [] }; const symptomsList = ['疲劳','腹痛','头痛'];
     const modal = document.createElement('div'); modal.className='lock-overlay'; modal.style.zIndex='3000';
-    modal.innerHTML = `<div style="background:#fff6e8; border-radius:48px; padding:24px; width:300px; text-align:left;"><h4>🌸 生理期标记 - ${dateKey}</h4><label><input type="checkbox" id="periodCheckbox" ${existing.isPeriod?'checked':''}> 经期中</label><div style="margin:12px 0;">症状</div><div style="display:flex; gap:12px; flex-wrap:wrap;">${symptomsList.map(s => `<button type="button" class="symptom-btn" data-symptom="${s}" style="background:${existing.symptoms.includes(s)?'#f3bc7c':'#fff0df'}">${s}</button>`).join('')}</div><div><button id="savePeriodBtn">保存</button><button id="cancelPeriodBtn">取消</button></div></div>`;
+    modal.innerHTML = `
+      <div class="period-modal-content">
+        <h4>🌸 生理期标记 - ${dateKey}</h4>
+        <label><input type="checkbox" id="periodCheckbox" ${existing.isPeriod?'checked':''}> 经期中</label>
+        <div style="margin:12px 0;">症状</div>
+        <div class="symptom-buttons">
+          ${symptomsList.map(s => `<button type="button" class="symptom-btn ${existing.symptoms.includes(s)?'active':''}" data-symptom="${s}">${s}</button>`).join('')}
+        </div>
+        <div class="period-modal-buttons">
+          <button id="savePeriodBtn" style="background:#b8e0b0;">保存</button>
+          <button id="cancelPeriodBtn" style="background:#ffefdb;">取消</button>
+        </div>
+      </div>
+    `;
     document.body.appendChild(modal);
-    modal.querySelectorAll('.symptom-btn').forEach(btn=>btn.addEventListener('click',()=>{ const isActive = btn.style.backgroundColor === 'rgb(243, 188, 124)' || btn.style.backgroundColor === '#f3bc7c'; btn.style.backgroundColor = isActive ? '#fff0df' : '#f3bc7c'; }));
+    const btns = modal.querySelectorAll('.symptom-btn');
+    btns.forEach(btn=>btn.addEventListener('click',()=>{ btn.classList.toggle('active'); }));
     modal.querySelector('#savePeriodBtn').onclick=()=>{
       const isPeriod = modal.querySelector('#periodCheckbox').checked;
-      const symptoms = Array.from(modal.querySelectorAll('.symptom-btn')).filter(btn => btn.style.backgroundColor === 'rgb(243, 188, 124)' || btn.style.backgroundColor === '#f3bc7c').map(btn=>btn.dataset.symptom);
+      const symptoms = Array.from(modal.querySelectorAll('.symptom-btn.active')).map(btn=>btn.dataset.symptom);
       if(isPeriod || symptoms.length) menstrualData[dateKey] = { isPeriod, symptoms }; else delete menstrualData[dateKey];
       saveAll(); document.body.removeChild(modal); renderGirlCalendar(); renderCycleStatsPanel();
     };
@@ -1153,6 +1264,18 @@
     girlMonth.addEventListener('change',()=>{ girlDisplayMonth=parseInt(girlMonth.value)-1; renderGirlCalendar(); });
     document.querySelectorAll('.girl-tab').forEach(tab=>tab.addEventListener('click',()=>{ document.querySelectorAll('.girl-tab').forEach(t=>t.classList.remove('active')); tab.classList.add('active'); girlCurrentMode = tab.dataset.girlmode; document.getElementById('girlPeriodPanel').style.display = girlCurrentMode==='period'?'block':'none'; document.getElementById('girlImportantPanel').style.display = girlCurrentMode==='important'?'block':'none'; renderGirlCalendar(); if(girlCurrentMode==='important') renderImportantList(); haptic(); }));
     document.getElementById('saveGirlMenstrualBtn').addEventListener('click',()=>{ cycleLength = parseInt(document.getElementById('girlCycleLength').value); periodDays = parseInt(document.getElementById('girlPeriodDays').value); saveAll(); renderGirlCalendar(); renderCycleStatsPanel(); alert('设置已保存'); });
+    // 展开/收起重要节日表单
+    const toggleBtn = document.getElementById('toggleImportantFormBtn');
+    const formContainer = document.getElementById('importantFormContainer');
+    toggleBtn.addEventListener('click',()=>{
+      if(formContainer.classList.contains('show')){
+        formContainer.classList.remove('show');
+        toggleBtn.innerHTML = '➕ 添加重要节日';
+      } else {
+        formContainer.classList.add('show');
+        toggleBtn.innerHTML = '− 收起表单';
+      }
+    });
     document.getElementById('addGirlImportantBtn').addEventListener('click',()=>{ const title = document.getElementById('girlImpTitle').value.trim(); const date = document.getElementById('girlImpDate').value; if(title&&date){ importantDays.push({ id:Date.now(), title, date, repeat:document.getElementById('girlImpRepeat').checked }); saveAll(); renderImportantList(); renderGirlCalendar(); } });
     renderGirlCalendar(); renderCycleStatsPanel();
   }
@@ -1246,7 +1369,8 @@
   }
   function renderNoteCategories(){
     const bar = document.getElementById('noteCategoriesBar');
-    bar.innerHTML = noteCategories.map(cat => `<div class="note-cat ${currentNoteCategoryId===cat?'active':''}" data-cat="${cat}">📁 ${cat}</div>`).join('') + `<button class="add-cat-btn" id="addNoteCatBtn">➕ 分类</button>`;
+    // 移除分类前的图标，只显示文字
+    bar.innerHTML = noteCategories.map(cat => `<div class="note-cat ${currentNoteCategoryId===cat?'active':''}" data-cat="${cat}">${cat}</div>`).join('') + `<button class="add-cat-btn" id="addNoteCatBtn">➕ 分类</button>`;
     document.querySelectorAll('.note-cat').forEach(el=>el.addEventListener('click',()=>{ currentNoteCategoryId = el.dataset.cat; currentNoteId = null; renderNoteCategories(); renderNoteCards(); loadNoteToEditor(); haptic(); }));
     document.getElementById('addNoteCatBtn').onclick = ()=>{ let newCat = prompt('新分类'); if(newCat && !noteCategories.includes(newCat)){ noteCategories.push(newCat); saveAll(); renderNoteCategories(); } };
   }
