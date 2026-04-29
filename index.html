@@ -193,7 +193,8 @@
     .period-modal-buttons button:last-child { background: #ffefdb; }
     .expand-important-btn { background: linear-gradient(135deg, #FFB27A, #FF8C42); border: none; border-radius: 60px; padding: 10px 20px; font-weight: 800; color: white; margin-bottom: 16px; width: 100%; cursor: pointer; }
     .rank-card { background: rgba(255,245,235,0.9); border-radius: 32px; padding: 16px; margin: 12px 0; border: 2px solid var(--card-border); }
-    .rank-header-buttons { display: flex; gap: 12px; justify-content: flex-start; margin-bottom: 10px; }
+    .rank-title { font-weight: 800; margin-bottom: 10px; color: var(--stat-label); font-size: 1.1rem; }
+    .rank-mode-bar { display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 12px; }
     .rank-mode-btn { background: #fff0df; border: 2px solid #f7ad6a; border-radius: 40px; padding: 6px 18px; font-weight: 700; font-size: 0.85rem; cursor: pointer; color: var(--stat-label); }
     .rank-mode-btn.active { background: var(--cat-active); color: white; border-color: #b45a2b; }
     .rank-time-nav { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 8px 0 16px 0; }
@@ -229,7 +230,7 @@
       <div class="month-selector"><button class="month-btn" id="prevMonthBk">←</button><span class="current-month" id="currentMonthBk"></span><button class="month-btn" id="nextMonthBk">→</button></div>
       <div class="month-summary"><div class="summary-item"><div class="summary-label">总收入</div><div class="summary-number income-num" id="monthIncomeBk">0</div></div><div class="summary-item"><div class="summary-label">总支出</div><div class="summary-number expense-num" id="monthExpenseBk">0</div></div><div class="summary-item"><div class="summary-label">结余</div><div class="summary-number" id="monthBalanceBk">0</div></div></div>
       
-      <!-- 支出排行卡片 (放在饼图上方) -->
+      <!-- 支出排行卡片 (重构布局：标题+按钮靠右) -->
       <div id="expenseRankingContainer" class="rank-card"></div>
       
       <div class="pie-charts-row"><div class="pie-chart-card"><div class="pie-title">📉 支出构成</div><canvas id="expensePieChart" width="200" height="200"></canvas></div><div class="pie-chart-card"><div class="pie-title">📈 收入构成</div><canvas id="incomePieChart" width="200" height="200"></canvas></div></div>
@@ -357,6 +358,10 @@
   let rankYear = currentBkYear;
   let rankMonth = currentBkMonth;
 
+  // 更新后的支出分类（增加了奶茶、零食、礼物、汽车）
+  const expenseCategories = ['餐饮','日用','交通','通讯','购物','娱乐','医疗','奶茶','零食','礼物','汽车','其他'];
+  const incomeCategories = ['工资','兼职','红包','理财','奖金','其他'];
+
   function haptic() { if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(10); }
   function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>]/g, m=> m==='&'?'&amp;':m==='<'?'&lt;':'>'); }
   function formatDateKey(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
@@ -434,7 +439,8 @@
         const balColor = bal > 0 ? '#2a7f4a' : (bal < 0 ? '#e06c3c' : 'inherit');
         html += `<tr><td style="font-weight:600;">${i+1}月</td><td>${inc.toFixed(2)}</td><td>${exp.toFixed(2)}</td><td style="color:${balColor}">${bal.toFixed(2)}</td></tr>`;
       }
-      html += `</tbody><tfoot><tr style="background:#ffefdb; font-weight:800;"><td>总计</td><td>${totalInc.toFixed(2)}</td><td>${totalExp.toFixed(2)}</td><td style="color:${totalBal>=0?'#2a7f4a':'#e06c3c'}">${totalBal.toFixed(2)}</td></tr></tfoot></table>`;
+      html += `</tbody><tfoot><tr style="background:#ffefdb; font-weight:800;"><td>总计</td><td>${totalInc.toFixed(2)}</td><td>${totalExp.toFixed(2)}</td><td style="color:${totalBal>=0?'#2a7f4a':'#e06c3c'}">${totalBal.toFixed(2)}</td></tr></tfoot>`;
+
       container.innerHTML = html;
     } else {
       let startYear = parseInt(document.getElementById('bkYearStartSelect').value);
@@ -447,12 +453,10 @@
       let totalBal = totalInc - totalExp;
       let html = '<table class="data-table"><thead><tr><th>年份</th><th>总收入(¥)</th><th>总支出(¥)</th><th>结余(¥)</th></tr></thead><tbody>';
       yearData.forEach(d=>{ const balColor = d.balance > 0 ? '#2a7f4a' : (d.balance < 0 ? '#e06c3c' : 'inherit'); html += `<tr><td style="font-weight:600;">${d.year}</td><td>${d.income.toFixed(2)}</td><td>${d.expense.toFixed(2)}</td><td style="color:${balColor}">${d.balance.toFixed(2)}</td></tr>`; });
-      html += `</tbody><tfoot><tr style="background:#ffefdb; font-weight:800;"><td>总计</td><td>${totalInc.toFixed(2)}</td><td>${totalExp.toFixed(2)}</td><td style="color:${totalBal>=0?'#2a7f4a':'#e06c3c'}">${totalBal.toFixed(2)}</td></tr></tfoot></table>`;
+      html += `</tbody><tfoot><tr style="background:#ffefdb; font-weight:800;"><td>总计</td><td>${totalInc.toFixed(2)}</td><td>${totalExp.toFixed(2)}</td><td style="color:${totalBal>=0?'#2a7f4a':'#e06c3c'}">${totalBal.toFixed(2)}</td></tr></tfoot>`;
       container.innerHTML = html;
     }
   }
-  const expenseCategories = ['餐饮','日用','交通','通讯','购物','娱乐','医疗','其他'];
-  const incomeCategories = ['工资','兼职','红包','理财','奖金','其他'];
   function renderBkCategoryGrid(){
     const cats = currentBkType==='expense'?expenseCategories:incomeCategories;
     document.getElementById('bkCategoryGrid').innerHTML = cats.map(cat => `<div class="cat-icon ${currentBkCategory===cat?'active':''}" data-category="${cat}">${cat}</div>`).join('');
@@ -469,7 +473,7 @@
     document.getElementById('monthBalanceBk').innerText=(inc-exp).toFixed(2);
     if(expenseChart) expenseChart.destroy();
     if(incomeChart) incomeChart.destroy();
-    expenseChart = new Chart(document.getElementById('expensePieChart'),{ type:'pie', data:{ labels:Array.from(expMap.keys()), datasets:[{ data:Array.from(expMap.values()), backgroundColor:['#FFB3BA','#C5E99B','#B5E3FF','#FFD6A5','#D4B8D4','#A7E0E0','#FBC8B5','#C9C9C9'] }] }, options:{ plugins:{ legend:{ display: false }, tooltip:{ callbacks:{ label: (ctx) => { const label = ctx.label || ''; const value = ctx.raw; const percent = exp > 0 ? ((value / exp) * 100).toFixed(1) : 0; return `${label}: ¥${value.toFixed(2)} (${percent}%)`; } } } } } });
+    expenseChart = new Chart(document.getElementById('expensePieChart'),{ type:'pie', data:{ labels:Array.from(expMap.keys()), datasets:[{ data:Array.from(expMap.values()), backgroundColor:['#FFB3BA','#C5E99B','#B5E3FF','#FFD6A5','#D4B8D4','#A7E0E0','#FBC8B5','#C9C9C9','#F4A261','#E9C46A','#2A9D8F','#E76F51'] }] }, options:{ plugins:{ legend:{ display: false }, tooltip:{ callbacks:{ label: (ctx) => { const label = ctx.label || ''; const value = ctx.raw; const percent = exp > 0 ? ((value / exp) * 100).toFixed(1) : 0; return `${label}: ¥${value.toFixed(2)} (${percent}%)`; } } } } } });
     incomeChart = new Chart(document.getElementById('incomePieChart'),{ type:'pie', data:{ labels:Array.from(incMap.keys()), datasets:[{ data:Array.from(incMap.values()), backgroundColor:['#9AD0F5','#C5E99B','#FFD966','#F4ACB7','#FFB347','#B0A8B9'] }] }, options:{ plugins:{ legend:{ display: false }, tooltip:{ callbacks:{ label: (ctx) => { const label = ctx.label || ''; const value = ctx.raw; const percent = inc > 0 ? ((value / inc) * 100).toFixed(1) : 0; return `${label}: ¥${value.toFixed(2)} (${percent}%)`; } } } } } });
     renderExpenseRanking();
   }
@@ -543,7 +547,9 @@
     }
     let sorted = Array.from(catAmounts.entries()).sort((a,b)=>b[1]-a[1]);
     let maxAmount = sorted.length ? sorted[0][1] : 0;
-    let html = `<div style="margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;"><span class="section-title">📊 支出分类排行</span><div class="rank-header-buttons"><button class="rank-mode-btn ${rankMode==='month'?'active':''}" data-mode="month">📅 本月</button><button class="rank-mode-btn ${rankMode==='year'?'active':''}" data-mode="year">📆 全年</button></div></div>`;
+    // 构建卡片：标题 + 按钮行（靠右）+ 时间导航 + 列表
+    let html = `<div class="rank-title">📊 支出分类排行</div>`;
+    html += `<div class="rank-mode-bar"><button class="rank-mode-btn ${rankMode==='month'?'active':''}" data-mode="month">📅 本月</button><button class="rank-mode-btn ${rankMode==='year'?'active':''}" data-mode="year">📆 全年</button></div>`;
     html += `<div class="rank-time-nav"><button class="rank-arrow" id="rankPrevBtn">←</button><span class="rank-time-text" id="rankTimeLabel"></span><button class="rank-arrow" id="rankNextBtn">→</button></div>`;
     if(sorted.length === 0) {
       html += `<div class="no-data-rank">✨ 暂无支出记录</div>`;
@@ -591,7 +597,7 @@
       renderExpenseRanking(); haptic();
     };
   }
-
+  
   // ===================== 工时模块（完整保留）=====================
   function getWorkMonthlySummary(year, month){
     const daysInMonth = getDaysInMonth(year,month);
@@ -717,7 +723,7 @@
       let totalYear = monthly.reduce((sum,m)=>sum+m.income,0);
       let html = '<table class="data-table"><thead><tr><th>月份</th><th>收入(¥)</th></tr></thead><tbody>';
       for(let i=0;i<12;i++) html += `<tr><td style="font-weight:600;">${i+1}月</td><td>${monthly[i].income.toFixed(2)}</td></tr>`;
-      html += `<tr style="background:#ffefdb; font-weight:800;"><td>合计</td><td>${totalYear.toFixed(2)}</td></tr></tbody></table>`;
+      html += `<tr style="background:#ffefdb; font-weight:800;"><td>合计</td><td>${totalYear.toFixed(2)}</td></tr></tbody>`;
       container.innerHTML = html;
     } else {
       let startYear = parseInt(document.getElementById('workYearStartSelect').value);
@@ -728,12 +734,12 @@
       let totalAll = yearData.reduce((sum,item)=>sum+item.income,0);
       let html = '<table class="data-table"><thead><tr><th>年份</th><th>总收入(¥)</th></tr></thead><tbody>';
       yearData.forEach(d=>{ html += `<tr><td style="font-weight:600;">${d.year}</td><td>${d.income.toFixed(2)}</td></tr>`; });
-      html += `<tr style="background:#ffefdb; font-weight:800;"><td>总计</td><td>${totalAll.toFixed(2)}</td></tr></tbody></table>`;
+      html += `<tr style="background:#ffefdb; font-weight:800;"><td>总计</td><td>${totalAll.toFixed(2)}</td></tr></tbody>`;
       container.innerHTML = html;
     }
   }
 
-  // ===================== 女生日历模块（完整实现） =====================
+  // ===================== 女生日历模块（完整恢复）=====================
   function getPeriodStartDates(){
     const starts = [];
     const periodDates = Object.keys(menstrualData).filter(k=>menstrualData[k]?.isPeriod).sort();
