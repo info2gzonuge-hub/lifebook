@@ -8,44 +8,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="全能生活本">
   <meta name="theme-color" content="#ffd9e8">
-  <script>
-    function generateIconDataURL(size) {
-      const canvas = document.createElement('canvas');
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext('2d');
-      const gradient = ctx.createLinearGradient(0, 0, size, size);
-      gradient.addColorStop(0, '#ffd9e8');
-      gradient.addColorStop(1, '#ffa6c9');
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-      ctx.arc(size/2, size/2, size/2.2, 0, Math.PI*2);
-      ctx.fill();
-      ctx.fillStyle = '#b3415c';
-      ctx.font = `bold ${size*0.5}px "Segoe UI", sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('🌈', size/2, size/2);
-      return canvas.toDataURL('image/png');
-    }
-    const icon180 = generateIconDataURL(180);
-    const icon512 = generateIconDataURL(512);
-    const appleIcon = document.createElement('link');
-    appleIcon.rel = 'apple-touch-icon';
-    appleIcon.href = icon180;
-    document.head.appendChild(appleIcon);
-    const manifest = {
-      name: '全能生活本', short_name: '全能本', start_url: '.', display: 'standalone',
-      theme_color: '#ffd9e8', background_color: '#ffe0ec',
-      icons: [{ src: icon180, sizes: '180x180', type: 'image/png' }, { src: icon512, sizes: '512x512', type: 'image/png' }]
-    };
-    const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-    const manifestURL = URL.createObjectURL(blob);
-    const manifestLink = document.createElement('link');
-    manifestLink.rel = 'manifest';
-    manifestLink.href = manifestURL;
-    document.head.appendChild(manifestLink);
-  </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -87,28 +49,12 @@
     .category-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; justify-content: center; }
     .cat-icon { background: #fffaf0; border-radius: 60px; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; border: 2px solid #ffce9e; cursor: pointer; }
     .cat-icon.active { background: var(--cat-active); border-color: #b45a2b; color: white; }
-    .record-form-icon {
-      background: #fff6e8;
-      border-radius: 40px;
-      padding: 14px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-    }
-    .record-form-icon input, .record-form-icon select {
-      flex: 1;
-      padding: 12px;
-      border-radius: 60px;
-      border: 2px solid #f7ad6a;
-      background: white;
-      font-size: 0.9rem;
-    }
+    .record-form-icon { background: #fff6e8; border-radius: 40px; padding: 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .record-form-icon input, .record-form-icon select { flex: 1; padding: 12px; border-radius: 60px; border: 2px solid #f7ad6a; background: white; font-size: 0.9rem; }
     .add-btn { background: #b8e0b0; border: none; border-radius: 60px; padding: 12px 20px; font-weight: bold; cursor: pointer; transition: 0.1s; }
     .add-btn:active { transform: scale(0.96); }
     .month-selector { display: flex; align-items: center; justify-content: space-between; background: #fff3e0; border-radius: 60px; padding: 8px 16px; margin-bottom: 16px; }
     .month-btn { background: #ffdbb5; border: none; border-radius: 40px; width: 40px; height: 40px; font-size: 1.3rem; cursor: pointer; }
-    .month-yr-btn { background: linear-gradient(135deg, #FFB27A, #FF8C42); border: none; border-radius: 40px; width: 48px; height: 40px; font-size: 1.4rem; cursor: pointer; box-shadow: 0 3px 0 #b45a2b; color: white; font-weight: bold; }
     .month-summary { background: #fffaf0; border-radius: 36px; padding: 12px; margin-bottom: 16px; display: flex; justify-content: space-around; text-align: center; }
     .summary-item { flex: 1; }
     .summary-label { font-size: 0.75rem; color: #b45a2b; }
@@ -183,61 +129,13 @@
     .day-cell.period-day { background: #ffe0f0; border-color: #ffb7c5; }
     .day-cell.ovulation-day { background: #fff0e0; border-color: #ffce9e; }
     .day-cell.predict-day { border: 2px dashed #ff9a8b; background: #fff9f0; }
-    .month-nav-arrows {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      margin: 8px 0 12px 0;
-    }
-    .month-arrow {
-      background: #ffefdb;
-      border: 2px solid #f7ad6a;
-      border-radius: 40px;
-      width: 40px;
-      height: 40px;
-      font-size: 1.2rem;
-      font-weight: bold;
-      cursor: pointer;
-      color: var(--stat-label);
-      transition: transform 0.1s;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-    }
+    .month-nav-arrows { display: flex; justify-content: space-between; align-items: center; width: 100%; margin: 8px 0 12px 0; }
+    .month-arrow { background: #ffefdb; border: 2px solid #f7ad6a; border-radius: 40px; width: 40px; height: 40px; font-size: 1.2rem; font-weight: bold; cursor: pointer; color: var(--stat-label); transition: transform 0.1s; display: inline-flex; justify-content: center; align-items: center; }
     .month-arrow:active { transform: scale(0.95); }
-    .current-month-display {
-      font-weight: 800;
-      font-size: 1.1rem;
-      color: var(--stat-label);
-      background: #fff0df;
-      padding: 6px 12px;
-      border-radius: 60px;
-      min-width: 120px;
-      text-align: center;
-    }
-    /* 工时添加区域 - 两控件等宽并排，不溢出 */
-    .inline-form-row {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .inline-form-row select,
-    .inline-form-row input {
-      flex: 1;
-      min-width: 0;
-      width: auto;
-      padding: 10px 8px;
-      border-radius: 60px;
-      border: 2px solid #f7ad6a;
-      background: white;
-      font-size: 0.9rem;
-    }
-    .add-work-card .add-btn {
-      width: 100%;
-      margin-top: 0;
-    }
+    .current-month-display { font-weight: 800; font-size: 1.1rem; color: var(--stat-label); background: #fff0df; padding: 6px 12px; border-radius: 60px; min-width: 120px; text-align: center; }
+    .inline-form-row { display: flex; gap: 12px; margin-bottom: 12px; }
+    .inline-form-row select, .inline-form-row input { flex: 1; min-width: 0; width: auto; padding: 10px 8px; border-radius: 60px; border: 2px solid #f7ad6a; background: white; font-size: 0.9rem; }
+    .add-work-card .add-btn { width: 100%; margin-top: 0; }
     .note-year-group { margin-bottom: 16px; }
     .note-year-header { background: #ffefdb; border-radius: 28px; padding: 8px 12px; font-weight: 800; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--stat-label); margin-bottom: 8px; }
     .note-year-notes { display: flex; flex-direction: column; gap: 8px; padding-left: 8px; }
@@ -283,88 +181,31 @@
     .data-table { width: 100%; border-collapse: collapse; background: #fffaf0; border-radius: 24px; }
     .data-table th, .data-table td { padding: 12px 6px; text-align: center; vertical-align: middle; border-bottom: 1px solid #ffd8b5; font-size: 0.8rem; }
     .data-table th { background: #ffefdb; color: var(--stat-label); font-weight: 800; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #ffce9e; }
-    .period-modal-content {
-      background: #fff6e8;
-      border-radius: 44px;
-      padding: 24px;
-      width: 340px;
-      max-width: 90%;
-      text-align: left;
-      color: #1e1e2f;
-      font-size: 16px;
-    }
-    .period-modal-content h4 {
-      color: #1e1e2f;
-      margin-bottom: 20px;
-      font-size: 20px;
-      font-weight: 800;
-    }
-    .symptom-buttons {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin: 12px 0;
-    }
-    .symptom-btn {
-      background: #fff0df;
-      border: 2px solid #f7ad6a;
-      border-radius: 40px;
-      padding: 8px 18px;
-      font-weight: 600;
-      font-size: 16px;
-      cursor: pointer;
-      transition: all 0.1s;
-      color: #1e1e2f;
-    }
-    .symptom-btn.active {
-      background: #f3bc7c;
-      border-color: #b45a2b;
-      color: white;
-    }
-    .period-modal-buttons {
-      display: flex;
-      gap: 12px;
-      margin-top: 16px;
-      justify-content: flex-end;
-    }
-    .period-modal-buttons button {
-      background: none;
-      border-radius: 60px;
-      padding: 6px 12px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.1s;
-      border: 2px solid #f7ad6a;
-    }
-    .period-modal-buttons button:first-child {
-      background: #b8e0b0;
-    }
-    .period-modal-buttons button:last-child {
-      background: #ffefdb;
-    }
-    .period-modal-content > button {
-      font-size: 16px;
-      padding: 8px 16px;
-      margin-right: 8px;
-      margin-bottom: 8px;
-      border-radius: 40px;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    #setAsStartBtn, #setAsEndBtn, #togglePeriodBtn {
-      font-size: 16px;
-      padding: 8px 16px;
-      border-radius: 40px;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    #setAsStartBtn { background: #b8e0b0; }
-    #setAsEndBtn { background: #ffd966; }
-    #togglePeriodBtn { background: #ffefdb; }
+    .data-table tfoot tr td { background: #ffefdb; font-weight: 800; border-top: 2px solid #ffce9e; }
+    .period-modal-content { background: #fff6e8; border-radius: 44px; padding: 24px; width: 340px; max-width: 90%; text-align: left; color: #1e1e2f; font-size: 16px; }
+    .period-modal-content h4 { margin-bottom: 20px; font-size: 20px; font-weight: 800; }
+    .symptom-buttons { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+    .symptom-btn { background: #fff0df; border: 2px solid #f7ad6a; border-radius: 40px; padding: 8px 18px; font-weight: 600; font-size: 16px; cursor: pointer; }
+    .symptom-btn.active { background: #f3bc7c; border-color: #b45a2b; color: white; }
+    .period-modal-buttons { display: flex; gap: 12px; margin-top: 16px; justify-content: flex-end; }
+    .period-modal-buttons button { background: none; border-radius: 60px; padding: 6px 12px; font-size: 14px; font-weight: 600; cursor: pointer; border: 2px solid #f7ad6a; }
+    .period-modal-buttons button:first-child { background: #b8e0b0; }
+    .period-modal-buttons button:last-child { background: #ffefdb; }
     .expand-important-btn { background: linear-gradient(135deg, #FFB27A, #FF8C42); border: none; border-radius: 60px; padding: 10px 20px; font-weight: 800; color: white; margin-bottom: 16px; width: 100%; cursor: pointer; }
+    .rank-card { background: rgba(255,245,235,0.9); border-radius: 32px; padding: 16px; margin: 12px 0; border: 2px solid var(--card-border); }
+    .rank-header-buttons { display: flex; gap: 12px; justify-content: flex-start; margin-bottom: 10px; }
+    .rank-mode-btn { background: #fff0df; border: 2px solid #f7ad6a; border-radius: 40px; padding: 6px 18px; font-weight: 700; font-size: 0.85rem; cursor: pointer; color: var(--stat-label); }
+    .rank-mode-btn.active { background: var(--cat-active); color: white; border-color: #b45a2b; }
+    .rank-time-nav { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 8px 0 16px 0; }
+    .rank-time-text { font-weight: 600; font-size: 0.9rem; background: #fff6e8; padding: 5px 15px; border-radius: 40px; color: var(--stat-label); min-width: 130px; text-align: center; }
+    .rank-arrow { background: #ffefdb; border: 1px solid #f7ad6a; border-radius: 50%; width: 32px; height: 32px; font-size: 1rem; font-weight: bold; cursor: pointer; color: var(--stat-label); }
+    .rank-list { margin-top: 8px; max-height: 280px; overflow-y: auto; }
+    .rank-item { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; font-size: 0.9rem; }
+    .rank-category { width: 70px; font-weight: 700; flex-shrink: 0; color: var(--stat-label); }
+    .rank-bar-wrapper { flex: 1; background: #ffe6d5; border-radius: 30px; height: 28px; overflow: hidden; }
+    .rank-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #FF9A6E, #FF6F4A); border-radius: 30px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: white; font-size: 0.7rem; font-weight: bold; }
+    .rank-amount { min-width: 70px; text-align: right; font-weight: 700; color: #b3415c; }
+    .no-data-rank { text-align: center; padding: 20px; color: #b87a4a; }
   </style>
 </head>
 <body>
@@ -379,22 +220,25 @@
       <div class="collapse-panel"><div class="collapse-header" id="bkYearlyHeader">📊 年度收支汇总 <span>▼</span></div><div class="collapse-content" id="bkYearlyContent"><div class="chart-switch" id="bkChartSwitch"><button class="switch-btn active" data-mode="month">📅 月视图</button><button class="switch-btn" data-mode="year">📆 年视图</button></div><div id="bkYearPickerContainer" class="month-year-picker"><select id="bkYearlyYearSelect"></select> 年</div><div id="bkYearRangeContainer" class="month-year-picker" style="display:none;"><select id="bkYearStartSelect"></select> 年 至 <select id="bkYearEndSelect"></select> 年</div><div class="table-scroll" id="bkTableContainer"></div></div></div>
       <div class="type-toggle" id="bkTypeToggle"><div class="type-btn active" data-type="expense">💸 支出</div><div class="type-btn" data-type="income">💰 收入</div></div>
       <div class="category-grid" id="bkCategoryGrid"></div>
-      <!-- 新增日期选择器 -->
       <div class="record-form-icon">
         <input type="number" id="bkAmount" placeholder="金额" step="0.01">
         <input type="text" id="bkNote" placeholder="备注">
         <input type="date" id="bkDate">
         <button class="add-btn" id="addBkBtn">➕ 添加</button>
       </div>
-      <div class="month-selector"><button class="month-btn" id="prevMonthBk">←</button><span class="current-month" id="currentMonthBk"></span><button class="month-btn" id="nextMonthBk">→</button><button class="month-yr-btn" id="yearlyStatsBtn" title="年度统计">📊</button></div>
+      <div class="month-selector"><button class="month-btn" id="prevMonthBk">←</button><span class="current-month" id="currentMonthBk"></span><button class="month-btn" id="nextMonthBk">→</button></div>
       <div class="month-summary"><div class="summary-item"><div class="summary-label">总收入</div><div class="summary-number income-num" id="monthIncomeBk">0</div></div><div class="summary-item"><div class="summary-label">总支出</div><div class="summary-number expense-num" id="monthExpenseBk">0</div></div><div class="summary-item"><div class="summary-label">结余</div><div class="summary-number" id="monthBalanceBk">0</div></div></div>
+      
+      <!-- 支出排行卡片 (放在饼图上方) -->
+      <div id="expenseRankingContainer" class="rank-card"></div>
+      
       <div class="pie-charts-row"><div class="pie-chart-card"><div class="pie-title">📉 支出构成</div><canvas id="expensePieChart" width="200" height="200"></canvas></div><div class="pie-chart-card"><div class="pie-title">📈 收入构成</div><canvas id="incomePieChart" width="200" height="200"></canvas></div></div>
       <button class="manage-btn" id="manageRecordsBtn">📋 管理本月记录</button>
     </div>
   </div>
 
-  <!-- 记账年度统计弹窗 -->
-  <div id="yearlyStatsModal" class="record-modal"><div class="record-modal-content" style="max-width:500px;"><div style="display:flex; justify-content:space-between;"><span class="section-title">📊 年度统计</span><button id="closeYearlyModalBtn" style="background:none; border:none; font-size:1.5rem;">✕</button></div><div style="display:flex; justify-content:center; gap:12px;"><button class="month-btn" id="prevYearBtn">←</button><span id="yearlyStatsYear" style="font-weight:800;"></span><button class="month-btn" id="nextYearBtn">→</button></div><canvas id="yearlyBarChart" width="400" height="200"></canvas><div class="table-scroll"><table style="width:100%; border-collapse:collapse;" id="yearlyStatsTable"><thead><tr><th>月份</th><th>收入(¥)</th><th>支出(¥)</th><th>结余(¥)</th></tr></thead><tbody></tbody></table></div><div id="yearlyTotalSpan" style="text-align:center; font-weight:800; margin-top:12px;"></div></div></div>
+  <!-- 记账年度统计弹窗（已删除按钮，但保留弹窗结构以防其他地方引用，实际无入口） -->
+  <div id="yearlyStatsModal" class="record-modal" style="display:none;"><div class="record-modal-content"><div style="display:flex; justify-content:space-between;"><span class="section-title">📊 年度统计</span><button id="closeYearlyModalBtn" style="background:none; border:none; font-size:1.5rem;">✕</button></div><div><canvas id="yearlyBarChart" width="400" height="200"></canvas><div id="yearlyTotalSpan"></div></div></div></div>
 
   <!-- 记工时视图 -->
   <div id="calendarView" class="view">
@@ -504,9 +348,14 @@
   let currentBkYear = new Date().getFullYear(), currentBkMonth = new Date().getMonth(), currentBkType = 'expense', currentBkCategory = '';
   let workDisplayYear = currentYear, workDisplayMonth = currentMonth;
   let girlDisplayYear = currentYear, girlDisplayMonth = currentMonth, girlCurrentMode = 'period';
-  let expenseChart, incomeChart, categoryChart, yearlyChart;
+  let expenseChart, incomeChart, categoryChart;
   let currentSelectedWorkDate = null;
   let bkChartMode = 'month', workChartMode = 'month';
+  
+  // 支出排行卡片的状态
+  let rankMode = 'month'; // 'month' or 'year'
+  let rankYear = currentBkYear;
+  let rankMonth = currentBkMonth;
 
   function haptic() { if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(10); }
   function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>]/g, m=> m==='&'?'&amp;':m==='<'?'&lt;':'>'); }
@@ -561,30 +410,13 @@
     localStorage.setItem(PASSWORD_KEY, savedPassword);
   }
 
-  // 记账相关函数（新增日期选择器联动）
+  // ===================== 记账模块 =====================
   function updateBkDateInput(){
-    // 将当前所选年份和月份的第一天填入日期选择器
     const year = currentBkYear;
     const month = currentBkMonth;
     const defaultDate = `${year}-${String(month+1).padStart(2,'0')}-01`;
     const bkDateInput = document.getElementById('bkDate');
     if(bkDateInput) bkDateInput.value = defaultDate;
-  }
-
-  function showYearlyStats(){
-    const year = currentBkYear;
-    document.getElementById('yearlyStatsYear').innerText = year;
-    const monthly = Array(12).fill().map(()=>({income:0,expense:0}));
-    bkRecords.forEach(r=>{ const d = new Date(r.date); if(d.getFullYear() === year){ const m = d.getMonth(); if(r.type==='income') monthly[m].income += r.amount; else monthly[m].expense += r.amount; } });
-    const incomes = monthly.map(m=>m.income); const expenses = monthly.map(m=>m.expense);
-    if(yearlyChart) yearlyChart.destroy();
-    const ctx = document.getElementById('yearlyBarChart').getContext('2d');
-    yearlyChart = new Chart(ctx, { type: 'bar', data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets: [{ label:'收入', data:incomes, backgroundColor:'#2a7f4a' },{ label:'支出', data:expenses, backgroundColor:'#e06c3c' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ¥${ctx.raw.toFixed(2)}` } } } } });
-    const tbody = document.getElementById('yearlyStatsTable').querySelector('tbody');
-    let totalInc=0, totalExp=0;
-    tbody.innerHTML = monthly.map((m,i)=>{ const bal = m.income - m.expense; totalInc+=m.income; totalExp+=m.expense; return `<tr><td style="font-weight:600;">${i+1}月</td><td>¥${m.income.toFixed(2)}</td><td>¥${m.expense.toFixed(2)}</td><td style="color:${bal>=0?'#2a7f4a':'#e06c3c'}">¥${bal.toFixed(2)}</td>`; }).join('');
-    document.getElementById('yearlyTotalSpan').innerHTML = `💰 全年收入: ¥${totalInc.toFixed(2)}   💸 全年支出: ¥${totalExp.toFixed(2)}   📊 总结余: ¥${(totalInc-totalExp).toFixed(2)}`;
-    document.getElementById('yearlyStatsModal').classList.add('show');
   }
   function renderBkYearlySummary(){
     const mode = bkChartMode;
@@ -593,13 +425,16 @@
       const year = parseInt(document.getElementById('bkYearlyYearSelect').value);
       const monthly = Array(12).fill().map(()=>({income:0,expense:0}));
       bkRecords.forEach(r=>{ const d = new Date(r.date); if(d.getFullYear() === year){ const m = d.getMonth(); if(r.type==='income') monthly[m].income += r.amount; else monthly[m].expense += r.amount; } });
+      let totalInc = monthly.reduce((s,m)=>s+m.income,0);
+      let totalExp = monthly.reduce((s,m)=>s+m.expense,0);
+      let totalBal = totalInc - totalExp;
       let html = '<table class="data-table"><thead><tr><th>月份</th><th>收入(¥)</th><th>支出(¥)</th><th>结余(¥)</th></tr></thead><tbody>';
       for(let i=0;i<12;i++){
         const inc = monthly[i].income, exp = monthly[i].expense, bal = inc - exp;
-        const balColor = bal > 0 ? '#e06c3c' : (bal < 0 ? '#2a7f4a' : 'inherit');
+        const balColor = bal > 0 ? '#2a7f4a' : (bal < 0 ? '#e06c3c' : 'inherit');
         html += `<tr><td style="font-weight:600;">${i+1}月</td><td>${inc.toFixed(2)}</td><td>${exp.toFixed(2)}</td><td style="color:${balColor}">${bal.toFixed(2)}</td></tr>`;
       }
-      html += '</tbody><table>';
+      html += `</tbody><tfoot><tr style="background:#ffefdb; font-weight:800;"><td>总计</td><td>${totalInc.toFixed(2)}</td><td>${totalExp.toFixed(2)}</td><td style="color:${totalBal>=0?'#2a7f4a':'#e06c3c'}">${totalBal.toFixed(2)}</td></tr></tfoot></table>`;
       container.innerHTML = html;
     } else {
       let startYear = parseInt(document.getElementById('bkYearStartSelect').value);
@@ -607,54 +442,14 @@
       if(startYear > endYear) { [startYear, endYear] = [endYear, startYear]; document.getElementById('bkYearStartSelect').value = startYear; document.getElementById('bkYearEndSelect').value = endYear; }
       let years = []; for(let y=startYear; y<=endYear; y++) years.push(y);
       const yearData = years.map(y=>{ let inc=0, exp=0; bkRecords.forEach(r=>{ const d = new Date(r.date); if(d.getFullYear() === y){ if(r.type==='income') inc+=r.amount; else exp+=r.amount; } }); return { year:y, income:inc, expense:exp, balance:inc-exp }; });
+      let totalInc = yearData.reduce((s,d)=>s+d.income,0);
+      let totalExp = yearData.reduce((s,d)=>s+d.expense,0);
+      let totalBal = totalInc - totalExp;
       let html = '<table class="data-table"><thead><tr><th>年份</th><th>总收入(¥)</th><th>总支出(¥)</th><th>结余(¥)</th></tr></thead><tbody>';
-      yearData.forEach(d=>{ const balColor = d.balance > 0 ? '#e06c3c' : (d.balance < 0 ? '#2a7f4a' : 'inherit'); html += `<tr><td style="font-weight:600;">${d.year}</td><td>${d.income.toFixed(2)}</td><td>${d.expense.toFixed(2)}</td><td style="color:${balColor}">${d.balance.toFixed(2)}</td>`; });
-      html += '</tbody><tr>';
+      yearData.forEach(d=>{ const balColor = d.balance > 0 ? '#2a7f4a' : (d.balance < 0 ? '#e06c3c' : 'inherit'); html += `<tr><td style="font-weight:600;">${d.year}</td><td>${d.income.toFixed(2)}</td><td>${d.expense.toFixed(2)}</td><td style="color:${balColor}">${d.balance.toFixed(2)}</td></tr>`; });
+      html += `</tbody><tfoot><tr style="background:#ffefdb; font-weight:800;"><td>总计</td><td>${totalInc.toFixed(2)}</td><td>${totalExp.toFixed(2)}</td><td style="color:${totalBal>=0?'#2a7f4a':'#e06c3c'}">${totalBal.toFixed(2)}</td></tr></tfoot></table>`;
       container.innerHTML = html;
     }
-  }
-
-  // 工时年度汇总（新增合计行）
-  function renderWorkYearlySummary(){
-    const mode = workChartMode;
-    const container = document.getElementById('workTableContainer');
-    if(mode === 'month'){
-      const year = parseInt(document.getElementById('workYearlyYearSelect').value);
-      const monthly = Array(12).fill().map(()=>({income:0}));
-      for(let m=0;m<12;m++){ const dim = getDaysInMonth(year,m);
-        for(let d=1; d<=dim; d++){ const key = formatDateKey(year,m,d); (records[key]||[]).forEach(r=>{ monthly[m].income += r.income; }); }
-      }
-      let totalYear = monthly.reduce((sum,m)=>sum+m.income,0);
-      let html = '<table class="data-table"><thead><tr><th>月份</th><th>收入(¥)</th></tr></thead><tbody>';
-      for(let i=0;i<12;i++) html += `<tr><td style="font-weight:600;">${i+1}月</td><td>${monthly[i].income.toFixed(2)}</td></tr>`;
-      html += `<tr style="background:#ffefdb; font-weight:800;"><td>全年合计</td><td>${totalYear.toFixed(2)}</td></tr>`;
-      html += '</tbody></table>';
-      container.innerHTML = html;
-    } else {
-      let startYear = parseInt(document.getElementById('workYearStartSelect').value);
-      let endYear = parseInt(document.getElementById('workYearEndSelect').value);
-      if(startYear > endYear) { [startYear, endYear] = [endYear, startYear]; document.getElementById('workYearStartSelect').value = startYear; document.getElementById('workYearEndSelect').value = endYear; }
-      let years = []; for(let y=startYear; y<=endYear; y++) years.push(y);
-      const yearData = years.map(y=>{ let totalInc=0; for(let m=0;m<12;m++){ const dim = getDaysInMonth(y,m); for(let d=1; d<=dim; d++){ const key = formatDateKey(y,m,d); (records[key]||[]).forEach(r=>{ totalInc += r.income; }); } } return { year:y, income:totalInc }; });
-      let totalAll = yearData.reduce((sum,item)=>sum+item.income,0);
-      let html = '<table class="data-table"><thead><tr><th>年份</th><th>总收入(¥)</th></tr></thead><tbody>';
-      yearData.forEach(d=>{ html += `<tr><td style="font-weight:600;">${d.year}</td><td>${d.income.toFixed(2)}</td></tr>`; });
-      html += `<tr style="background:#ffefdb; font-weight:800;"><td>总计</td><td>${totalAll.toFixed(2)}</td></tr>`;
-      html += '</tbody><tr>';
-      container.innerHTML = html;
-    }
-  }
-
-  function getWorkMonthlySummary(year, month){
-    const daysInMonth = getDaysInMonth(year,month);
-    let totalHours=0, totalIncome=0;
-    for(let d=1; d<=daysInMonth; d++){ const key = formatDateKey(year,month,d); (records[key]||[]).forEach(r=>{ totalHours += r.hours; totalIncome += r.income; }); }
-    return { totalHours, totalIncome };
-  }
-  function updateWorkSummaryCard(){
-    const { totalHours, totalIncome } = getWorkMonthlySummary(workDisplayYear, workDisplayMonth);
-    document.getElementById('workTotalHours').innerText = totalHours.toFixed(1);
-    document.getElementById('workTotalIncome').innerText = totalIncome.toFixed(2);
   }
   const expenseCategories = ['餐饮','日用','交通','通讯','购物','娱乐','医疗','其他'];
   const incomeCategories = ['工资','兼职','红包','理财','奖金','其他'];
@@ -676,16 +471,14 @@
     if(incomeChart) incomeChart.destroy();
     expenseChart = new Chart(document.getElementById('expensePieChart'),{ type:'pie', data:{ labels:Array.from(expMap.keys()), datasets:[{ data:Array.from(expMap.values()), backgroundColor:['#FFB3BA','#C5E99B','#B5E3FF','#FFD6A5','#D4B8D4','#A7E0E0','#FBC8B5','#C9C9C9'] }] }, options:{ plugins:{ legend:{ display: false }, tooltip:{ callbacks:{ label: (ctx) => { const label = ctx.label || ''; const value = ctx.raw; const percent = exp > 0 ? ((value / exp) * 100).toFixed(1) : 0; return `${label}: ¥${value.toFixed(2)} (${percent}%)`; } } } } } });
     incomeChart = new Chart(document.getElementById('incomePieChart'),{ type:'pie', data:{ labels:Array.from(incMap.keys()), datasets:[{ data:Array.from(incMap.values()), backgroundColor:['#9AD0F5','#C5E99B','#FFD966','#F4ACB7','#FFB347','#B0A8B9'] }] }, options:{ plugins:{ legend:{ display: false }, tooltip:{ callbacks:{ label: (ctx) => { const label = ctx.label || ''; const value = ctx.raw; const percent = inc > 0 ? ((value / inc) * 100).toFixed(1) : 0; return `${label}: ¥${value.toFixed(2)} (${percent}%)`; } } } } } });
+    renderExpenseRanking();
   }
   function addBookkeeping(){ 
     if(!currentBkCategory){ alert('请选择分类'); return; } 
     let amount=parseFloat(document.getElementById('bkAmount').value); 
     if(isNaN(amount)||amount<=0) return; 
     let userDate = document.getElementById('bkDate').value;
-    if(!userDate){ 
-      // 如果日期为空，默认使用当前月份的第一天
-      userDate = `${currentBkYear}-${String(currentBkMonth+1).padStart(2,'0')}-01`;
-    }
+    if(!userDate){ userDate = `${currentBkYear}-${String(currentBkMonth+1).padStart(2,'0')}-01`; }
     bkRecords.push({
       id:Date.now(),
       type:currentBkType,
@@ -699,7 +492,6 @@
     renderBkYearlySummary(); 
     document.getElementById('bkAmount').value=''; 
     document.getElementById('bkNote').value=''; 
-    // 日期输入框保留为用户上次选择的值（或自动恢复为当前月份1号）
     updateBkDateInput();
     haptic(); 
   }
@@ -710,7 +502,9 @@
     currentBkYear=ny; currentBkMonth=nm; 
     document.getElementById('currentMonthBk').innerText=`${currentBkYear}年 ${currentBkMonth+1}月`; 
     refreshBookkeepingUI();
-    updateBkDateInput(); // 月份切换时更新日期选择器为新的月份1号
+    updateBkDateInput();
+    if(rankMode === 'month') { rankYear = currentBkYear; rankMonth = currentBkMonth; renderExpenseRanking(); }
+    else { rankYear = currentBkYear; renderExpenseRanking(); }
   }
   function showRecordModal(){
     const recs = bkRecords.filter(r=>{let d=new Date(r.date); return d.getFullYear()===currentBkYear && d.getMonth()===currentBkMonth;});
@@ -720,8 +514,96 @@
     document.querySelectorAll('.delete-record').forEach(btn=>btn.addEventListener('click',()=>{ bkRecords=bkRecords.filter(r=>r.id!=btn.dataset.id); saveAll(); refreshBookkeepingUI(); renderBkYearlySummary(); showRecordModal(); }));
     document.getElementById('recordModal').classList.add('show');
   }
+  function renderExpenseRanking() {
+    let container = document.getElementById('expenseRankingContainer');
+    if(!container) return;
+    let catAmounts = new Map();
+    if(rankMode === 'month') {
+      let year = rankYear, month = rankMonth;
+      let startDate = new Date(year, month, 1);
+      let endDate = new Date(year, month+1, 0);
+      bkRecords.forEach(r => {
+        if(r.type === 'expense') {
+          let d = new Date(r.date);
+          if(d >= startDate && d <= endDate) {
+            catAmounts.set(r.category, (catAmounts.get(r.category)||0) + r.amount);
+          }
+        }
+      });
+    } else {
+      let year = rankYear;
+      bkRecords.forEach(r => {
+        if(r.type === 'expense') {
+          let d = new Date(r.date);
+          if(d.getFullYear() === year) {
+            catAmounts.set(r.category, (catAmounts.get(r.category)||0) + r.amount);
+          }
+        }
+      });
+    }
+    let sorted = Array.from(catAmounts.entries()).sort((a,b)=>b[1]-a[1]);
+    let maxAmount = sorted.length ? sorted[0][1] : 0;
+    let html = `<div style="margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;"><span class="section-title">📊 支出分类排行</span><div class="rank-header-buttons"><button class="rank-mode-btn ${rankMode==='month'?'active':''}" data-mode="month">📅 本月</button><button class="rank-mode-btn ${rankMode==='year'?'active':''}" data-mode="year">📆 全年</button></div></div>`;
+    html += `<div class="rank-time-nav"><button class="rank-arrow" id="rankPrevBtn">←</button><span class="rank-time-text" id="rankTimeLabel"></span><button class="rank-arrow" id="rankNextBtn">→</button></div>`;
+    if(sorted.length === 0) {
+      html += `<div class="no-data-rank">✨ 暂无支出记录</div>`;
+    } else {
+      html += `<div class="rank-list">`;
+      sorted.forEach(([cat, amount]) => {
+        let percent = maxAmount > 0 ? (amount / maxAmount) * 100 : 0;
+        html += `<div class="rank-item">
+          <div class="rank-category">${escapeHtml(cat)}</div>
+          <div class="rank-bar-wrapper"><div class="rank-bar-fill" style="width: ${percent}%;"></div></div>
+          <div class="rank-amount">¥${amount.toFixed(2)}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+    container.innerHTML = html;
+    let rankTimeLabel = document.getElementById('rankTimeLabel');
+    if(rankMode === 'month') rankTimeLabel.innerText = `${rankYear}年 ${rankMonth+1}月`;
+    else rankTimeLabel.innerText = `${rankYear}年`;
+    document.querySelectorAll('.rank-mode-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        rankMode = btn.dataset.mode;
+        if(rankMode === 'month') { rankYear = currentBkYear; rankMonth = currentBkMonth; }
+        else { rankYear = currentBkYear; }
+        renderExpenseRanking();
+        haptic();
+      });
+    });
+    let prevBtn = document.getElementById('rankPrevBtn');
+    let nextBtn = document.getElementById('rankNextBtn');
+    if(prevBtn) prevBtn.onclick = () => {
+      if(rankMode === 'month') {
+        let newMonth = rankMonth - 1, newYear = rankYear;
+        if(newMonth < 0) { newMonth = 11; newYear--; }
+        rankYear = newYear; rankMonth = newMonth;
+      } else { rankYear--; }
+      renderExpenseRanking(); haptic();
+    };
+    if(nextBtn) nextBtn.onclick = () => {
+      if(rankMode === 'month') {
+        let newMonth = rankMonth + 1, newYear = rankYear;
+        if(newMonth > 11) { newMonth = 0; newYear++; }
+        rankYear = newYear; rankMonth = newMonth;
+      } else { rankYear++; }
+      renderExpenseRanking(); haptic();
+    };
+  }
 
-  // 工时模块
+  // ===================== 工时模块（完整保留）=====================
+  function getWorkMonthlySummary(year, month){
+    const daysInMonth = getDaysInMonth(year,month);
+    let totalHours=0, totalIncome=0;
+    for(let d=1; d<=daysInMonth; d++){ const key = formatDateKey(year,month,d); (records[key]||[]).forEach(r=>{ totalHours += r.hours; totalIncome += r.income; }); }
+    return { totalHours, totalIncome };
+  }
+  function updateWorkSummaryCard(){
+    const { totalHours, totalIncome } = getWorkMonthlySummary(workDisplayYear, workDisplayMonth);
+    document.getElementById('workTotalHours').innerText = totalHours.toFixed(1);
+    document.getElementById('workTotalIncome').innerText = totalIncome.toFixed(2);
+  }
   function renderCategoryList(){
     const container = document.getElementById('categoryList');
     container.innerHTML = workCategories.map(cat => `<div class="category-item"><div style="display:flex; justify-content:space-between;"><span class="category-name">${escapeHtml(cat.name)}</span><div><button class="save-category" data-id="${cat.id}">💾</button><button class="delete-category" data-id="${cat.id}">🗑️</button></div></div><div style="display:flex; gap:6px; margin-top:6px;"><span>时薪(¥)</span><input type="number" class="category-rate" data-id="${cat.id}" value="${cat.hourlyRate}" step="0.5"></div></div>`).join('');
@@ -803,7 +685,7 @@
     document.querySelectorAll('.edit-btn').forEach(b=>b.addEventListener('click',()=>startEdit(b.dataset.id))); document.querySelectorAll('.delete-btn').forEach(b=>b.addEventListener('click',()=>{ let arr2=records[selectedDateStr]||[]; arr2=arr2.filter(r=>r.id!=b.dataset.id); if(arr2.length) records[selectedDateStr]=arr2; else delete records[selectedDateStr]; saveAll(); renderRecordsInModal(); renderWorkCalendar(); renderWorkYearlySummary(); })); }
   function startEdit(id){ const rec=(records[selectedDateStr]||[]).find(r=>r.id==id); if(rec){ editingRecordId=id; showEditForm(rec); } }
   function hideEditForm(){ document.getElementById('editFormContainer').style.display='none'; editingRecordId=null; }
-  function showEditForm(init){ const catOptions = workCategories.map(c=>`<option value="${c.id}" ${init.categoryId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join(''); const formHtml = `<div class="edit-form"><select id="editCategory">${catOptions}</select><input id="editHours" type="number" step="0.1" placeholder="工时" value="${init.hours||''}"><input id="editRate" type="number" step="0.1" placeholder="时薪" value="${init.rate||''}"><div style="display:flex; gap:12px;"><button id="saveEditBtn">保存</button><button id="cancelEditBtn">取消</button></div></div>`; const container = document.getElementById('editFormContainer'); container.innerHTML = formHtml; container.style.display = 'block'; document.getElementById('cancelEditBtn').onclick = hideEditForm; document.getElementById('saveEditBtn').onclick = ()=>{ const categoryId = document.getElementById('editCategory').value; const hours = parseFloat(document.getElementById('editHours').value); const rate = parseFloat(document.getElementById('editRate').value); if(isNaN(hours)||hours<=0){ alert('有效工时'); return; } if(isNaN(rate)||rate<=0){ alert('有效时薪'); return; } const updated = { id: editingRecordId, categoryId, hours, rate, income: hours*rate }; let arr = records[selectedDateStr]||[]; arr = arr.map(r=>r.id==editingRecordId?updated:r); records[selectedDateStr] = arr; saveAll(); renderRecordsInModal(); renderWorkCalendar(); renderWorkYearlySummary(); hideEditForm(); haptic(); }; }
+  function showEditForm(init){ const catOptions = workCategories.map(c=>`<option value="${c.id}" ${init.categoryId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join(''); const formHtml = `<div class="edit-form"><select id="editCategory">${catOptions}</select><input id="editHours" type="number" step="0.5" placeholder="工时" value="${init.hours||''}"><input id="editRate" type="number" step="0.5" placeholder="时薪" value="${init.rate||''}"><div style="display:flex; gap:12px;"><button id="saveEditBtn">保存</button><button id="cancelEditBtn">取消</button></div></div>`; const container = document.getElementById('editFormContainer'); container.innerHTML = formHtml; container.style.display = 'block'; document.getElementById('cancelEditBtn').onclick = hideEditForm; document.getElementById('saveEditBtn').onclick = ()=>{ const categoryId = document.getElementById('editCategory').value; const hours = parseFloat(document.getElementById('editHours').value); const rate = parseFloat(document.getElementById('editRate').value); if(isNaN(hours)||hours<=0){ alert('有效工时'); return; } if(isNaN(rate)||rate<=0){ alert('有效时薪'); return; } const updated = { id: editingRecordId, categoryId, hours, rate, income: hours*rate }; let arr = records[selectedDateStr]||[]; arr = arr.map(r=>r.id==editingRecordId?updated:r); records[selectedDateStr] = arr; saveAll(); renderRecordsInModal(); renderWorkCalendar(); renderWorkYearlySummary(); hideEditForm(); haptic(); }; }
   function closeModal(){ document.getElementById('dayModal').classList.remove('show'); hideEditForm(); }
   function showWorkRecordsModal(){
     const year = workDisplayYear, month = workDisplayMonth;
@@ -823,8 +705,35 @@
     document.querySelectorAll('.delete-work-record').forEach(btn => { btn.addEventListener('click', (e) => { const key = btn.dataset.key; const id = btn.dataset.id; let arr = records[key] || []; arr = arr.filter(r => r.id != id); if(arr.length) records[key] = arr; else delete records[key]; saveAll(); showWorkRecordsModal(); renderWorkCalendar(); renderWorkYearlySummary(); }); });
     document.getElementById('workRecordsModal').classList.add('show');
   }
+  function renderWorkYearlySummary(){
+    const mode = workChartMode;
+    const container = document.getElementById('workTableContainer');
+    if(mode === 'month'){
+      const year = parseInt(document.getElementById('workYearlyYearSelect').value);
+      const monthly = Array(12).fill().map(()=>({income:0}));
+      for(let m=0;m<12;m++){ const dim = getDaysInMonth(year,m);
+        for(let d=1; d<=dim; d++){ const key = formatDateKey(year,m,d); (records[key]||[]).forEach(r=>{ monthly[m].income += r.income; }); }
+      }
+      let totalYear = monthly.reduce((sum,m)=>sum+m.income,0);
+      let html = '<table class="data-table"><thead><tr><th>月份</th><th>收入(¥)</th></tr></thead><tbody>';
+      for(let i=0;i<12;i++) html += `<tr><td style="font-weight:600;">${i+1}月</td><td>${monthly[i].income.toFixed(2)}</td></tr>`;
+      html += `<tr style="background:#ffefdb; font-weight:800;"><td>合计</td><td>${totalYear.toFixed(2)}</td></tr></tbody></table>`;
+      container.innerHTML = html;
+    } else {
+      let startYear = parseInt(document.getElementById('workYearStartSelect').value);
+      let endYear = parseInt(document.getElementById('workYearEndSelect').value);
+      if(startYear > endYear) { [startYear, endYear] = [endYear, startYear]; document.getElementById('workYearStartSelect').value = startYear; document.getElementById('workYearEndSelect').value = endYear; }
+      let years = []; for(let y=startYear; y<=endYear; y++) years.push(y);
+      const yearData = years.map(y=>{ let totalInc=0; for(let m=0;m<12;m++){ const dim = getDaysInMonth(y,m); for(let d=1; d<=dim; d++){ const key = formatDateKey(y,m,d); (records[key]||[]).forEach(r=>{ totalInc += r.income; }); } } return { year:y, income:totalInc }; });
+      let totalAll = yearData.reduce((sum,item)=>sum+item.income,0);
+      let html = '<table class="data-table"><thead><tr><th>年份</th><th>总收入(¥)</th></tr></thead><tbody>';
+      yearData.forEach(d=>{ html += `<tr><td style="font-weight:600;">${d.year}</td><td>${d.income.toFixed(2)}</td></tr>`; });
+      html += `<tr style="background:#ffefdb; font-weight:800;"><td>总计</td><td>${totalAll.toFixed(2)}</td></tr></tbody></table>`;
+      container.innerHTML = html;
+    }
+  }
 
-  // 女生日历（保持完整）
+  // ===================== 女生日历模块（完整实现） =====================
   function getPeriodStartDates(){
     const starts = [];
     const periodDates = Object.keys(menstrualData).filter(k=>menstrualData[k]?.isPeriod).sort();
@@ -876,16 +785,6 @@
     }
     return set;
   }
-  function getOvulationWindowRange(){
-    const nextStart = getNextPeriodStart();
-    if(!nextStart) return null;
-    const nextDate = new Date(nextStart);
-    const ovulationDay = new Date(nextDate);
-    ovulationDay.setDate(nextDate.getDate() - 14);
-    let start = new Date(ovulationDay); start.setDate(ovulationDay.getDate() - 2);
-    let end = new Date(ovulationDay); end.setDate(ovulationDay.getDate() + 2);
-    return { start: formatDateKey(start.getFullYear(), start.getMonth(), start.getDate()), end: formatDateKey(end.getFullYear(), end.getMonth(), end.getDate()) };
-  }
   function getPredictionRange(){
     const nextStart = getNextPeriodStart();
     if(!nextStart) return new Set();
@@ -922,17 +821,15 @@
     const ovuSet = getOvulationWindowSet();
     const predictSet = getPredictionRange();
     let cells = [];
-    for(let i=1; i<first; i++) cells.push(buildGirlPeriodCell(y,m,0,true));
-    for(let d=1; d<=dim; d++) cells.push(buildGirlPeriodCell(y,m,d,false, ovuSet, predictSet));
+    for(let i=1; i<first; i++) cells.push(`<div class="day-cell empty"><div class="day-number"></div></div>`);
+    for(let d=1; d<=dim; d++) cells.push(buildGirlPeriodCell(y,m,d, ovuSet, predictSet));
     const totalCells=42, remaining=totalCells-cells.length;
-    for(let i=0;i<remaining;i++) cells.push(buildGirlPeriodCell(y,m,0,true));
+    for(let i=0;i<remaining;i++) cells.push(`<div class="day-cell empty"><div class="day-number"></div></div>`);
     document.getElementById('girlCalendarGrid').innerHTML = cells.join('');
     document.querySelectorAll('#girlCalendarGrid .day-cell:not(.empty)').forEach(cell=>{ cell.addEventListener('click',()=>{ const dateKey = cell.dataset.date; if(dateKey) onPeriodDateClick(dateKey); }); });
-    const monthDisplay = document.getElementById('girlCurrentMonthDisplay');
-    if(monthDisplay) monthDisplay.innerText = `${girlDisplayYear}年 ${girlDisplayMonth+1}月`;
+    document.getElementById('girlCurrentMonthDisplay').innerText = `${girlDisplayYear}年 ${girlDisplayMonth+1}月`;
   }
-  function buildGirlPeriodCell(y,m,d,isPlaceholder, ovuSet, predictSet){
-    if(isPlaceholder) return `<div class="day-cell empty"><div class="day-number"></div></div>`;
+  function buildGirlPeriodCell(y,m,d, ovuSet, predictSet){
     const key = formatDateKey(y,m,d);
     const today = new Date(); const isToday = (y===today.getFullYear() && m===today.getMonth() && d===today.getDate());
     let classes = 'day-cell';
@@ -940,11 +837,9 @@
     const isPeriod = menstrualData[key]?.isPeriod === true;
     const isOvulation = ovuSet.has(key) && !isPeriod;
     const isPredict = predictSet.has(key) && !isPeriod;
-    let styleClass = '';
-    if(isPeriod) styleClass = 'period-day';
-    else if(isOvulation) styleClass = 'ovulation-day';
-    else if(isPredict) styleClass = 'predict-day';
-    if(styleClass) classes += ' ' + styleClass;
+    if(isPeriod) classes += ' period-day';
+    else if(isOvulation) classes += ' ovulation-day';
+    else if(isPredict) classes += ' predict-day';
     let icons = [];
     if(isPeriod) icons.push('🌸');
     if(isPeriod && menstrualData[key]?.symptoms?.length > 0) icons.push('❗');
@@ -996,9 +891,8 @@
     else cyclesHtml = '<div class="cycle-stats-item">暂无经期记录，请点击日期设为月经开始</div>';
     const nextPeriod = getNextPeriodStart();
     const nextPeriodHtml = nextPeriod ? `<div class="cycle-stats-item">📅 下次经期预测开始日：${nextPeriod}</div>` : '';
-    const ovuRange = getOvulationWindowRange();
-    let ovuHtml = '';
-    if(ovuRange) ovuHtml = `<div class="cycle-stats-item">💧 下次排卵期窗口：${ovuRange.start} 至 ${ovuRange.end}</div>`;
+    const ovuRange = (()=>{ const nextStart = getNextPeriodStart(); if(!nextStart) return null; const nextDate = new Date(nextStart); const ovulationDay = new Date(nextDate); ovulationDay.setDate(nextDate.getDate() - 14); let start = new Date(ovulationDay); start.setDate(ovulationDay.getDate() - 2); let end = new Date(ovulationDay); end.setDate(ovulationDay.getDate() + 2); return { start: formatDateKey(start.getFullYear(), start.getMonth(), start.getDate()), end: formatDateKey(end.getFullYear(), end.getMonth(), end.getDate()) }; })();
+    let ovuHtml = ovuRange ? `<div class="cycle-stats-item">💧 下次排卵期窗口：${ovuRange.start} 至 ${ovuRange.end}</div>` : '';
     const regularity = (()=>{
       const intervals = [];
       for(let i=1;i<starts.length;i++){
@@ -1044,8 +938,8 @@
     const container = document.getElementById('girlImportantList'); if(!importantDays.length){ container.innerHTML='<div>暂无重要日子</div>'; return; }
     const today = new Date(); today.setHours(0,0,0,0);
     container.innerHTML = importantDays.map(imp=>{ let target = new Date(imp.date); let diff = 0; if(imp.repeat){ let curYear = today.getFullYear(); let thisYear = new Date(curYear, target.getMonth(), target.getDate()); if(thisYear < today) thisYear.setFullYear(curYear+1); diff = Math.ceil((thisYear - today)/86400000); } else diff = Math.ceil((target - today)/86400000); const prefix = diff>=0 ? '还有' : '已过'; const absDiff = Math.abs(diff); return `<div class="important-item"><div class="important-info"><div>📌 ${escapeHtml(imp.title)}</div><div>${imp.date} ${imp.repeat?'🔄每年':''}</div></div><div class="important-actions"><button class="edit-imp" data-id="${imp.id}">✏️</button><button class="del-imp" data-id="${imp.id}">🗑️</button><div class="important-days"><div class="important-days-number">${absDiff}</div><div>${prefix}</div></div></div></div>`; }).join('');
-    document.querySelectorAll('.del-imp').forEach(btn=>btn.addEventListener('click',e=>{ let id=parseInt(btn.dataset.id); importantDays=importantDays.filter(d=>d.id!==id); saveAll(); renderImportantList(); renderGirlCalendar(); }));
-    document.querySelectorAll('.edit-imp').forEach(btn=>btn.addEventListener('click',e=>{ let id=parseInt(btn.dataset.id); let imp=importantDays.find(d=>d.id===id); if(imp){ let newTitle=prompt('编辑标题',imp.title); if(newTitle) imp.title=newTitle; let newDate=prompt('日期(YYYY-MM-DD)',imp.date); if(newDate&&/^\d{4}-\d{2}-\d{2}$/.test(newDate)) imp.date=newDate; let newRepeat=confirm('每年重复？'); imp.repeat=newRepeat; saveAll(); renderImportantList(); renderGirlCalendar(); } }));
+    document.querySelectorAll('.del-imp').forEach(btn=>btn.addEventListener('click',e=>{ let id=parseInt(btn.dataset.id); importantDays=importantDays.filter(d=>d.id!==id); saveAll(); renderImportantList(); renderGirlCalendarImportant(); }));
+    document.querySelectorAll('.edit-imp').forEach(btn=>btn.addEventListener('click',e=>{ let id=parseInt(btn.dataset.id); let imp=importantDays.find(d=>d.id===id); if(imp){ let newTitle=prompt('编辑标题',imp.title); if(newTitle) imp.title=newTitle; let newDate=prompt('日期(YYYY-MM-DD)',imp.date); if(newDate&&/^\d{4}-\d{2}-\d{2}$/.test(newDate)) imp.date=newDate; let newRepeat=confirm('每年重复？'); imp.repeat=newRepeat; saveAll(); renderImportantList(); renderGirlCalendarImportant(); } }));
   }
   function renderGirlCalendarImportant(){
     const y=girlDisplayYear, m=girlDisplayMonth;
@@ -1057,8 +951,7 @@
     for(let i=0;i<remaining;i++) cells.push(`<div class="day-cell empty"><div class="day-number"></div></div>`);
     document.getElementById('girlImportantCalendarGrid').innerHTML = cells.join('');
     document.querySelectorAll('#girlImportantCalendarGrid .day-cell:not(.empty)').forEach(cell=>{ cell.addEventListener('click',()=>{ const date = cell.dataset.date; if(date) onImportantClick(date); }); });
-    const monthDisplay = document.getElementById('girlImportantCurrentMonthDisplay');
-    if(monthDisplay) monthDisplay.innerText = `${girlDisplayYear}年 ${girlDisplayMonth+1}月`;
+    document.getElementById('girlImportantCurrentMonthDisplay').innerText = `${girlDisplayYear}年 ${girlDisplayMonth+1}月`;
   }
   function buildGirlImportantCell(y,m,d){
     const key = formatDateKey(y,m,d);
@@ -1067,7 +960,7 @@
     const text = getLunarOrFestivalShort(y, m+1, d);
     return `<div class="${classes}" data-date="${key}"><div class="day-number">${d}</div><div class="lunar-text">${text}</div></div>`;
   }
-  function onImportantClick(dateKey){ const title = prompt('添加重要日子', '纪念日'); if(title){ importantDays.push({ id:Date.now(), title, date:dateKey, repeat:false }); saveAll(); renderImportantList(); renderGirlCalendar(); } }
+  function onImportantClick(dateKey){ const title = prompt('添加重要日子', '纪念日'); if(title){ importantDays.push({ id:Date.now(), title, date:dateKey, repeat:false }); saveAll(); renderImportantList(); renderGirlCalendarImportant(); } }
   function changeGirlMonth(delta){
     let newMonth = girlDisplayMonth + delta;
     let newYear = girlDisplayYear;
@@ -1077,7 +970,8 @@
     girlDisplayMonth = newMonth;
     document.getElementById('girlYearSelect').value = girlDisplayYear;
     document.getElementById('girlMonthSelect').value = girlDisplayMonth+1;
-    renderGirlCalendar();
+    if(girlCurrentMode === 'period') renderGirlCalendarPeriod();
+    else renderGirlCalendarImportant();
     if(girlCurrentMode === 'important') renderImportantList();
   }
   function renderGirlCalendar(){
@@ -1090,11 +984,11 @@
     girlYear.addEventListener('change',()=>{ girlDisplayYear=parseInt(girlYear.value); renderGirlCalendar(); });
     girlMonth.addEventListener('change',()=>{ girlDisplayMonth=parseInt(girlMonth.value)-1; renderGirlCalendar(); });
     document.querySelectorAll('.girl-tab').forEach(tab=>tab.addEventListener('click',()=>{ document.querySelectorAll('.girl-tab').forEach(t=>t.classList.remove('active')); tab.classList.add('active'); girlCurrentMode = tab.dataset.girlmode; document.getElementById('girlPeriodPanel').style.display = girlCurrentMode==='period'?'block':'none'; document.getElementById('girlImportantPanel').style.display = girlCurrentMode==='important'?'block':'none'; renderGirlCalendar(); if(girlCurrentMode==='important') renderImportantList(); haptic(); }));
-    document.getElementById('saveGirlMenstrualBtn').addEventListener('click',()=>{ cycleLength = parseInt(document.getElementById('girlCycleLength').value); periodDays = parseInt(document.getElementById('girlPeriodDays').value); saveAll(); renderGirlCalendar(); renderCycleStatsPanel(); alert('设置已保存'); });
+    document.getElementById('saveGirlMenstrualBtn').addEventListener('click',()=>{ cycleLength = parseInt(document.getElementById('girlCycleLength').value); periodDays = parseInt(document.getElementById('girlPeriodDays').value); saveAll(); renderGirlCalendarPeriod(); renderCycleStatsPanel(); alert('设置已保存'); });
     const toggleBtn = document.getElementById('toggleImportantFormBtn');
     const formContainer = document.getElementById('importantFormContainer');
     toggleBtn.addEventListener('click',()=>{ if(formContainer.classList.contains('show')){ formContainer.classList.remove('show'); toggleBtn.innerHTML = '➕ 添加重要节日'; } else { formContainer.classList.add('show'); toggleBtn.innerHTML = '− 收起表单'; } });
-    document.getElementById('addGirlImportantBtn').addEventListener('click',()=>{ const title = document.getElementById('girlImpTitle').value.trim(); const date = document.getElementById('girlImpDate').value; if(title&&date){ importantDays.push({ id:Date.now(), title, date, repeat:document.getElementById('girlImpRepeat').checked }); saveAll(); renderImportantList(); renderGirlCalendar(); } });
+    document.getElementById('addGirlImportantBtn').addEventListener('click',()=>{ const title = document.getElementById('girlImpTitle').value.trim(); const date = document.getElementById('girlImpDate').value; if(title&&date){ importantDays.push({ id:Date.now(), title, date, repeat:document.getElementById('girlImpRepeat').checked }); saveAll(); renderImportantList(); renderGirlCalendarImportant(); } });
     document.getElementById('girlPrevMonthBtn').addEventListener('click',()=>changeGirlMonth(-1));
     document.getElementById('girlNextMonthBtn').addEventListener('click',()=>changeGirlMonth(1));
     document.getElementById('girlImportantPrevMonthBtn').addEventListener('click',()=>changeGirlMonth(-1));
@@ -1103,7 +997,7 @@
     renderCycleStatsPanel();
   }
 
-  // 笔记模块
+  // ===================== 备忘录模块 =====================
   function renderNoteCards(){
     const filtered = notes.filter(n=> n.categoryId === currentNoteCategoryId);
     const container = document.getElementById('noteListCards');
@@ -1177,13 +1071,25 @@
     document.getElementById('insertIconBtn')?.addEventListener('click',()=>{ let char=prompt('输入表情或特殊符号','😊'); if(char){ ed.focus(); document.execCommand('insertText',false,char); } });
     document.getElementById('insertImageBtn')?.addEventListener('click',()=>{ let url=prompt('图片URL'); if(url){ let img=`<img src="${url}" style="max-width:100%;">`; ed.focus(); document.execCommand('insertHTML',false,img); } });
   }
+  function renderTodoCategories(){
+    const container=document.getElementById('todoCategoriesContainer');
+    container.innerHTML = todoCategories.map(cat => `<div class="cat-tab ${currentTodoCat===cat?'active':''}" data-cat="${cat}">${cat}</div>`).join('') + '<button id="addTodoCategoryBtn" class="add-cat-btn">➕ 分类</button>';
+    document.querySelectorAll('.cat-tab').forEach(el=>el.addEventListener('click',()=>{ currentTodoCat=el.dataset.cat; renderTodoCategories(); renderTodoItems(); haptic(); }));
+    document.getElementById('addTodoCategoryBtn').onclick=()=>{ let newCat=prompt('新分类'); if(newCat&&!todoCategories.includes(newCat)){ todoCategories.push(newCat); saveAll(); renderTodoCategories(); } };
+  }
+  function renderTodoItems(){
+    const filtered=todos.filter(t=>t.category===currentTodoCat);
+    const container=document.getElementById('todoItemsContainer');
+    if(!filtered.length){ container.innerHTML='<div>✨ 暂无待办</div>'; return; }
+    container.innerHTML=filtered.map(todo=>`<div class="todo-item" data-id="${todo.id}"><input type="checkbox" ${todo.completed?'checked':''}><input type="text" class="todo-text ${todo.completed?'completed':''}" value="${escapeHtml(todo.text)}"><button class="delete-todo">🗑️</button></div>`).join('');
+    container.querySelectorAll('.todo-item').forEach(item=>{ const id=parseInt(item.dataset.id); const chk=item.querySelector('input[type="checkbox"]'); const txt=item.querySelector('.todo-text'); const del=item.querySelector('.delete-todo'); chk.addEventListener('change',()=>{ const todo=todos.find(t=>t.id===id); if(todo){ todo.completed=chk.checked; if(todo.completed) txt.classList.add('completed'); else txt.classList.remove('completed'); saveAll(); } }); txt.addEventListener('blur',()=>{ const todo=todos.find(t=>t.id===id); if(todo) todo.text=txt.value; saveAll(); }); del.addEventListener('click',()=>{ todos=todos.filter(t=>t.id!==id); saveAll(); renderTodoItems(); }); });
+  }
+  function addNewTodo(){
+    const text=document.getElementById('newTodoText').value.trim();
+    if(text){ todos.push({ id:Date.now(), text, completed:false, category:currentTodoCat }); saveAll(); renderTodoItems(); document.getElementById('newTodoText').value=''; haptic(); }
+  }
 
-  // 待办模块
-  function renderTodoCategories(){ const container=document.getElementById('todoCategoriesContainer'); container.innerHTML = todoCategories.map(cat => `<div class="cat-tab ${currentTodoCat===cat?'active':''}" data-cat="${cat}">${cat}</div>`).join('') + '<button id="addTodoCategoryBtn" class="add-cat-btn">➕ 分类</button>'; document.querySelectorAll('.cat-tab').forEach(el=>el.addEventListener('click',()=>{ currentTodoCat=el.dataset.cat; renderTodoCategories(); renderTodoItems(); haptic(); })); document.getElementById('addTodoCategoryBtn').onclick=()=>{ let newCat=prompt('新分类'); if(newCat&&!todoCategories.includes(newCat)){ todoCategories.push(newCat); saveAll(); renderTodoCategories(); } }; }
-  function renderTodoItems(){ const filtered=todos.filter(t=>t.category===currentTodoCat); const container=document.getElementById('todoItemsContainer'); if(!filtered.length){ container.innerHTML='<div>✨ 暂无待办</div>'; return; } container.innerHTML=filtered.map(todo=>`<div class="todo-item" data-id="${todo.id}"><input type="checkbox" ${todo.completed?'checked':''}><input type="text" class="todo-text ${todo.completed?'completed':''}" value="${escapeHtml(todo.text)}"><button class="delete-todo">🗑️</button></div>`).join(''); container.querySelectorAll('.todo-item').forEach(item=>{ const id=parseInt(item.dataset.id); const chk=item.querySelector('input[type="checkbox"]'); const txt=item.querySelector('.todo-text'); const del=item.querySelector('.delete-todo'); chk.addEventListener('change',()=>{ const todo=todos.find(t=>t.id===id); if(todo){ todo.completed=chk.checked; if(todo.completed) txt.classList.add('completed'); else txt.classList.remove('completed'); saveAll(); } }); txt.addEventListener('blur',()=>{ const todo=todos.find(t=>t.id===id); if(todo) todo.text=txt.value; saveAll(); }); del.addEventListener('click',()=>{ todos=todos.filter(t=>t.id!==id); saveAll(); renderTodoItems(); }); }); }
-  function addNewTodo(){ const text=document.getElementById('newTodoText').value.trim(); if(text){ todos.push({ id:Date.now(), text, completed:false, category:currentTodoCat }); saveAll(); renderTodoItems(); document.getElementById('newTodoText').value=''; haptic(); } }
-
-  // 密码锁、主题
+  // ===================== 其他功能 =====================
   function showLock(callback){ if(!passwordEnabled||isUnlocked){ if(callback) callback(); return; }
     const div=document.createElement('div'); div.className='lock-overlay'; let temp='';
     div.innerHTML=`<div style="background:#fff0df; border-radius:48px; padding:24px;"><h3>🔐 请输入6位密码</h3><div style="font-size:2rem; letter-spacing:8px;" id="lockInput">______</div><div id="lockNumpad"></div><div><button id="lockOkBtn">确认</button><button id="lockCancelBtn">取消</button></div></div>`;
@@ -1244,7 +1150,6 @@
     document.getElementById('bkYearlyHeader').addEventListener('click', ()=>document.getElementById('bkYearlyContent').classList.toggle('show'));
     document.getElementById('collapseHeader').addEventListener('click', ()=>document.getElementById('collapseContent').classList.toggle('show'));
     document.getElementById('pieChartHeader').addEventListener('click', ()=>document.getElementById('pieChartContent').classList.toggle('show'));
-    document.getElementById('cycleStatsHeader').addEventListener('click', ()=>document.getElementById('cycleStatsContent').classList.toggle('show'));
     const bkSwitchBtns = document.querySelectorAll('#bkChartSwitch .switch-btn');
     bkSwitchBtns.forEach(btn=>{ btn.addEventListener('click',()=>{ bkSwitchBtns.forEach(b=>b.classList.remove('active')); btn.classList.add('active'); bkChartMode = btn.dataset.mode; const picker = document.getElementById('bkYearPickerContainer'), range = document.getElementById('bkYearRangeContainer'); if(bkChartMode === 'year'){ picker.style.display='none'; range.style.display='flex'; } else { picker.style.display='flex'; range.style.display='none'; } renderBkYearlySummary(); }); });
     const workSwitchBtns = document.querySelectorAll('#workChartSwitch .switch-btn');
@@ -1262,16 +1167,12 @@
     document.getElementById('addBkBtn').onclick=addBookkeeping;
     document.getElementById('manageRecordsBtn').onclick=showRecordModal;
     document.getElementById('closeRecordModalBtn').onclick = ()=>document.getElementById('recordModal').classList.remove('show');
-    document.getElementById('yearlyStatsBtn').onclick=showYearlyStats;
-    document.getElementById('closeYearlyModalBtn').onclick=()=>document.getElementById('yearlyStatsModal').classList.remove('show');
-    document.getElementById('prevYearBtn').onclick=()=>{ currentBkYear--; showYearlyStats(); };
-    document.getElementById('nextYearBtn').onclick=()=>{ currentBkYear++; showYearlyStats(); };
     document.getElementById('manageWorkRecordsBtn').onclick = showWorkRecordsModal;
     document.getElementById('closeWorkModalBtn').onclick = ()=>document.getElementById('workRecordsModal').classList.remove('show');
     document.querySelectorAll('#bkTypeToggle .type-btn').forEach(btn=>btn.addEventListener('click',()=>{ document.querySelectorAll('#bkTypeToggle .type-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); currentBkType=btn.dataset.type; renderBkCategoryGrid(); }));
     renderBkCategoryGrid(); refreshBookkeepingUI();
-    // 初始化记账日期选择器
     updateBkDateInput();
+    renderExpenseRanking();
     renderNoteCategories(); renderNoteCards(); loadNoteToEditor();
     document.getElementById('newNoteBtn').onclick=newNote;
     document.getElementById('saveNoteBtn').onclick=saveCurrentNote;
@@ -1282,7 +1183,7 @@
     initGirlCalendar();
     document.querySelectorAll('.nav-item').forEach(item=>item.addEventListener('click',()=>switchView(item.dataset.view)));
     document.getElementById('exportDataBtn').onclick=()=>{ const data={records,workCategories,bkRecords,notes:{categories:noteCategories,notes},todoCategories,todos,menstrualData,cycleLength,periodDays,importantDays}; const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'})); a.download=`backup_${Date.now()}.json`; a.click(); };
-    document.getElementById('importDataBtn').onclick=()=>{ const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json'; inp.onchange=e=>{ const f=e.target.files[0]; const reader=new FileReader(); reader.onload=ev=>{ const d=JSON.parse(ev.target.result); if(d.records) records=d.records; if(d.workCategories) workCategories=d.workCategories; if(d.bkRecords) bkRecords=d.bkRecords; if(d.notes){ noteCategories=d.notes.categories||noteCategories; notes=d.notes.notes||notes; } if(d.todoCategories) todoCategories=d.todoCategories; if(d.todos) todos=d.todos; if(d.menstrualData) menstrualData=d.menstrualData; if(d.cycleLength) cycleLength=d.cycleLength; if(d.periodDays) periodDays=d.periodDays; if(d.importantDays) importantDays=d.importantDays; saveAll(); renderWorkCalendar(); refreshBookkeepingUI(); renderWorkYearlySummary(); renderBkYearlySummary(); renderNoteCategories(); renderNoteCards(); loadNoteToEditor(); renderTodoCategories(); renderTodoItems(); renderGirlCalendar(); renderCycleStatsPanel(); alert('导入成功'); }; reader.readAsText(f); }; inp.click(); };
+    document.getElementById('importDataBtn').onclick=()=>{ const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json'; inp.onchange=e=>{ const f=e.target.files[0]; const reader=new FileReader(); reader.onload=ev=>{ const d=JSON.parse(ev.target.result); if(d.records) records=d.records; if(d.workCategories) workCategories=d.workCategories; if(d.bkRecords) bkRecords=d.bkRecords; if(d.notes){ noteCategories=d.notes.categories||noteCategories; notes=d.notes.notes||notes; } if(d.todoCategories) todoCategories=d.todoCategories; if(d.todos) todos=d.todos; if(d.menstrualData) menstrualData=d.menstrualData; if(d.cycleLength) cycleLength=d.cycleLength; if(d.periodDays) periodDays=d.periodDays; if(d.importantDays) importantDays=d.importantDays; saveAll(); renderWorkCalendar(); refreshBookkeepingUI(); renderWorkYearlySummary(); renderBkYearlySummary(); renderNoteCategories(); renderNoteCards(); loadNoteToEditor(); renderTodoCategories(); renderTodoItems(); renderGirlCalendar(); renderCycleStatsPanel(); renderExpenseRanking(); alert('导入成功'); }; reader.readAsText(f); }; inp.click(); };
     document.getElementById('clearAllDataBtn').onclick=confirmClearAllData;
     document.getElementById('togglePasswordLockBtn').onclick=()=>{ let pwd=prompt('设置6位数字密码'); if(pwd&&/^\d{6}$/.test(pwd)){ savedPassword=pwd; passwordEnabled=true; saveAll(); isUnlocked=false; updatePasswordLockStatus(); alert('密码已启用'); showLock(); } else alert('密码必须为6位数字'); };
     document.getElementById('disablePasswordLockBtn').onclick=()=>{ passwordEnabled=false; saveAll(); isUnlocked=true; updatePasswordLockStatus(); alert('密码锁已关闭'); };
