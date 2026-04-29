@@ -87,8 +87,23 @@
     .category-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; justify-content: center; }
     .cat-icon { background: #fffaf0; border-radius: 60px; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; border: 2px solid #ffce9e; cursor: pointer; }
     .cat-icon.active { background: var(--cat-active); border-color: #b45a2b; color: white; }
-    .record-form-icon { background: #fff6e8; border-radius: 40px; padding: 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-    .record-form-icon input { flex: 1; padding: 12px; border-radius: 60px; border: 2px solid #f7ad6a; background: white; }
+    .record-form-icon {
+      background: #fff6e8;
+      border-radius: 40px;
+      padding: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .record-form-icon input, .record-form-icon select {
+      flex: 1;
+      padding: 12px;
+      border-radius: 60px;
+      border: 2px solid #f7ad6a;
+      background: white;
+      font-size: 0.9rem;
+    }
     .add-btn { background: #b8e0b0; border: none; border-radius: 60px; padding: 12px 20px; font-weight: bold; cursor: pointer; transition: 0.1s; }
     .add-btn:active { transform: scale(0.96); }
     .month-selector { display: flex; align-items: center; justify-content: space-between; background: #fff3e0; border-radius: 60px; padding: 8px 16px; margin-bottom: 16px; }
@@ -210,8 +225,8 @@
     }
     .inline-form-row select,
     .inline-form-row input {
-      flex: 1;           /* 等分剩余空间 */
-      min-width: 0;      /* 关键：允许缩小到内容宽度以下，防止溢出 */
+      flex: 1;
+      min-width: 0;
       width: auto;
       padding: 10px 8px;
       border-radius: 60px;
@@ -364,7 +379,13 @@
       <div class="collapse-panel"><div class="collapse-header" id="bkYearlyHeader">📊 年度收支汇总 <span>▼</span></div><div class="collapse-content" id="bkYearlyContent"><div class="chart-switch" id="bkChartSwitch"><button class="switch-btn active" data-mode="month">📅 月视图</button><button class="switch-btn" data-mode="year">📆 年视图</button></div><div id="bkYearPickerContainer" class="month-year-picker"><select id="bkYearlyYearSelect"></select> 年</div><div id="bkYearRangeContainer" class="month-year-picker" style="display:none;"><select id="bkYearStartSelect"></select> 年 至 <select id="bkYearEndSelect"></select> 年</div><div class="table-scroll" id="bkTableContainer"></div></div></div>
       <div class="type-toggle" id="bkTypeToggle"><div class="type-btn active" data-type="expense">💸 支出</div><div class="type-btn" data-type="income">💰 收入</div></div>
       <div class="category-grid" id="bkCategoryGrid"></div>
-      <div class="record-form-icon"><input type="number" id="bkAmount" placeholder="金额" step="0.01"><input type="text" id="bkNote" placeholder="备注"><button class="add-btn" id="addBkBtn">➕ 添加</button></div>
+      <!-- 新增日期选择器 -->
+      <div class="record-form-icon">
+        <input type="number" id="bkAmount" placeholder="金额" step="0.01">
+        <input type="text" id="bkNote" placeholder="备注">
+        <input type="date" id="bkDate">
+        <button class="add-btn" id="addBkBtn">➕ 添加</button>
+      </div>
       <div class="month-selector"><button class="month-btn" id="prevMonthBk">←</button><span class="current-month" id="currentMonthBk"></span><button class="month-btn" id="nextMonthBk">→</button><button class="month-yr-btn" id="yearlyStatsBtn" title="年度统计">📊</button></div>
       <div class="month-summary"><div class="summary-item"><div class="summary-label">总收入</div><div class="summary-number income-num" id="monthIncomeBk">0</div></div><div class="summary-item"><div class="summary-label">总支出</div><div class="summary-number expense-num" id="monthExpenseBk">0</div></div><div class="summary-item"><div class="summary-label">结余</div><div class="summary-number" id="monthBalanceBk">0</div></div></div>
       <div class="pie-charts-row"><div class="pie-chart-card"><div class="pie-title">📉 支出构成</div><canvas id="expensePieChart" width="200" height="200"></canvas></div><div class="pie-chart-card"><div class="pie-title">📈 收入构成</div><canvas id="incomePieChart" width="200" height="200"></canvas></div></div>
@@ -540,7 +561,16 @@
     localStorage.setItem(PASSWORD_KEY, savedPassword);
   }
 
-  // 记账相关函数（保持原有）
+  // 记账相关函数（新增日期选择器联动）
+  function updateBkDateInput(){
+    // 将当前所选年份和月份的第一天填入日期选择器
+    const year = currentBkYear;
+    const month = currentBkMonth;
+    const defaultDate = `${year}-${String(month+1).padStart(2,'0')}-01`;
+    const bkDateInput = document.getElementById('bkDate');
+    if(bkDateInput) bkDateInput.value = defaultDate;
+  }
+
   function showYearlyStats(){
     const year = currentBkYear;
     document.getElementById('yearlyStatsYear').innerText = year;
@@ -552,7 +582,7 @@
     yearlyChart = new Chart(ctx, { type: 'bar', data: { labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], datasets: [{ label:'收入', data:incomes, backgroundColor:'#2a7f4a' },{ label:'支出', data:expenses, backgroundColor:'#e06c3c' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ¥${ctx.raw.toFixed(2)}` } } } } });
     const tbody = document.getElementById('yearlyStatsTable').querySelector('tbody');
     let totalInc=0, totalExp=0;
-    tbody.innerHTML = monthly.map((m,i)=>{ const bal = m.income - m.expense; totalInc+=m.income; totalExp+=m.expense; return `<tr><td style="font-weight:600;">${i+1}月</td><td>¥${m.income.toFixed(2)}</td><td>¥${m.expense.toFixed(2)}</td><td style="color:${bal>=0?'#2a7f4a':'#e06c3c'}">¥${bal.toFixed(2)}</td></tr>`; }).join('');
+    tbody.innerHTML = monthly.map((m,i)=>{ const bal = m.income - m.expense; totalInc+=m.income; totalExp+=m.expense; return `<tr><td style="font-weight:600;">${i+1}月</td><td>¥${m.income.toFixed(2)}</td><td>¥${m.expense.toFixed(2)}</td><td style="color:${bal>=0?'#2a7f4a':'#e06c3c'}">¥${bal.toFixed(2)}</td>`; }).join('');
     document.getElementById('yearlyTotalSpan').innerHTML = `💰 全年收入: ¥${totalInc.toFixed(2)}   💸 全年支出: ¥${totalExp.toFixed(2)}   📊 总结余: ¥${(totalInc-totalExp).toFixed(2)}`;
     document.getElementById('yearlyStatsModal').classList.add('show');
   }
@@ -569,7 +599,7 @@
         const balColor = bal > 0 ? '#e06c3c' : (bal < 0 ? '#2a7f4a' : 'inherit');
         html += `<tr><td style="font-weight:600;">${i+1}月</td><td>${inc.toFixed(2)}</td><td>${exp.toFixed(2)}</td><td style="color:${balColor}">${bal.toFixed(2)}</td></tr>`;
       }
-      html += '</tbody></table>';
+      html += '</tbody><table>';
       container.innerHTML = html;
     } else {
       let startYear = parseInt(document.getElementById('bkYearStartSelect').value);
@@ -578,8 +608,8 @@
       let years = []; for(let y=startYear; y<=endYear; y++) years.push(y);
       const yearData = years.map(y=>{ let inc=0, exp=0; bkRecords.forEach(r=>{ const d = new Date(r.date); if(d.getFullYear() === y){ if(r.type==='income') inc+=r.amount; else exp+=r.amount; } }); return { year:y, income:inc, expense:exp, balance:inc-exp }; });
       let html = '<table class="data-table"><thead><tr><th>年份</th><th>总收入(¥)</th><th>总支出(¥)</th><th>结余(¥)</th></tr></thead><tbody>';
-      yearData.forEach(d=>{ const balColor = d.balance > 0 ? '#e06c3c' : (d.balance < 0 ? '#2a7f4a' : 'inherit'); html += `<tr><td style="font-weight:600;">${d.year}</td><td>${d.income.toFixed(2)}</td><td>${d.expense.toFixed(2)}</td><td style="color:${balColor}">${d.balance.toFixed(2)}</td></tr>`; });
-      html += '</tbody></table>';
+      yearData.forEach(d=>{ const balColor = d.balance > 0 ? '#e06c3c' : (d.balance < 0 ? '#2a7f4a' : 'inherit'); html += `<tr><td style="font-weight:600;">${d.year}</td><td>${d.income.toFixed(2)}</td><td>${d.expense.toFixed(2)}</td><td style="color:${balColor}">${d.balance.toFixed(2)}</td>`; });
+      html += '</tbody><tr>';
       container.innerHTML = html;
     }
   }
@@ -610,7 +640,7 @@
       let html = '<table class="data-table"><thead><tr><th>年份</th><th>总收入(¥)</th></tr></thead><tbody>';
       yearData.forEach(d=>{ html += `<tr><td style="font-weight:600;">${d.year}</td><td>${d.income.toFixed(2)}</td></tr>`; });
       html += `<tr style="background:#ffefdb; font-weight:800;"><td>总计</td><td>${totalAll.toFixed(2)}</td></tr>`;
-      html += '</tbody></table>';
+      html += '</tbody><tr>';
       container.innerHTML = html;
     }
   }
@@ -647,8 +677,41 @@
     expenseChart = new Chart(document.getElementById('expensePieChart'),{ type:'pie', data:{ labels:Array.from(expMap.keys()), datasets:[{ data:Array.from(expMap.values()), backgroundColor:['#FFB3BA','#C5E99B','#B5E3FF','#FFD6A5','#D4B8D4','#A7E0E0','#FBC8B5','#C9C9C9'] }] }, options:{ plugins:{ legend:{ display: false }, tooltip:{ callbacks:{ label: (ctx) => { const label = ctx.label || ''; const value = ctx.raw; const percent = exp > 0 ? ((value / exp) * 100).toFixed(1) : 0; return `${label}: ¥${value.toFixed(2)} (${percent}%)`; } } } } } });
     incomeChart = new Chart(document.getElementById('incomePieChart'),{ type:'pie', data:{ labels:Array.from(incMap.keys()), datasets:[{ data:Array.from(incMap.values()), backgroundColor:['#9AD0F5','#C5E99B','#FFD966','#F4ACB7','#FFB347','#B0A8B9'] }] }, options:{ plugins:{ legend:{ display: false }, tooltip:{ callbacks:{ label: (ctx) => { const label = ctx.label || ''; const value = ctx.raw; const percent = inc > 0 ? ((value / inc) * 100).toFixed(1) : 0; return `${label}: ¥${value.toFixed(2)} (${percent}%)`; } } } } } });
   }
-  function addBookkeeping(){ if(!currentBkCategory){ alert('请选择分类'); return; } let amount=parseFloat(document.getElementById('bkAmount').value); if(isNaN(amount)||amount<=0) return; bkRecords.push({id:Date.now(),type:currentBkType,category:currentBkCategory,amount,date:new Date().toISOString().slice(0,10),note:document.getElementById('bkNote').value.trim()}); saveAll(); refreshBookkeepingUI(); renderBkYearlySummary(); document.getElementById('bkAmount').value=''; document.getElementById('bkNote').value=''; haptic(); }
-  function changeBkMonth(delta){ let nm=currentBkMonth+delta, ny=currentBkYear; if(nm<0){ nm=11; ny--; } if(nm>11){ nm=0; ny++; } currentBkYear=ny; currentBkMonth=nm; document.getElementById('currentMonthBk').innerText=`${currentBkYear}年 ${currentBkMonth+1}月`; refreshBookkeepingUI(); }
+  function addBookkeeping(){ 
+    if(!currentBkCategory){ alert('请选择分类'); return; } 
+    let amount=parseFloat(document.getElementById('bkAmount').value); 
+    if(isNaN(amount)||amount<=0) return; 
+    let userDate = document.getElementById('bkDate').value;
+    if(!userDate){ 
+      // 如果日期为空，默认使用当前月份的第一天
+      userDate = `${currentBkYear}-${String(currentBkMonth+1).padStart(2,'0')}-01`;
+    }
+    bkRecords.push({
+      id:Date.now(),
+      type:currentBkType,
+      category:currentBkCategory,
+      amount,
+      date:userDate,
+      note:document.getElementById('bkNote').value.trim()
+    }); 
+    saveAll(); 
+    refreshBookkeepingUI(); 
+    renderBkYearlySummary(); 
+    document.getElementById('bkAmount').value=''; 
+    document.getElementById('bkNote').value=''; 
+    // 日期输入框保留为用户上次选择的值（或自动恢复为当前月份1号）
+    updateBkDateInput();
+    haptic(); 
+  }
+  function changeBkMonth(delta){ 
+    let nm=currentBkMonth+delta, ny=currentBkYear; 
+    if(nm<0){ nm=11; ny--; } 
+    if(nm>11){ nm=0; ny++; } 
+    currentBkYear=ny; currentBkMonth=nm; 
+    document.getElementById('currentMonthBk').innerText=`${currentBkYear}年 ${currentBkMonth+1}月`; 
+    refreshBookkeepingUI();
+    updateBkDateInput(); // 月份切换时更新日期选择器为新的月份1号
+  }
   function showRecordModal(){
     const recs = bkRecords.filter(r=>{let d=new Date(r.date); return d.getFullYear()===currentBkYear && d.getMonth()===currentBkMonth;});
     if(!recs.length){ alert('本月无记录'); return; }
@@ -1207,6 +1270,8 @@
     document.getElementById('closeWorkModalBtn').onclick = ()=>document.getElementById('workRecordsModal').classList.remove('show');
     document.querySelectorAll('#bkTypeToggle .type-btn').forEach(btn=>btn.addEventListener('click',()=>{ document.querySelectorAll('#bkTypeToggle .type-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); currentBkType=btn.dataset.type; renderBkCategoryGrid(); }));
     renderBkCategoryGrid(); refreshBookkeepingUI();
+    // 初始化记账日期选择器
+    updateBkDateInput();
     renderNoteCategories(); renderNoteCards(); loadNoteToEditor();
     document.getElementById('newNoteBtn').onclick=newNote;
     document.getElementById('saveNoteBtn').onclick=saveCurrentNote;
