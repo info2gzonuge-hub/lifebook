@@ -8,6 +8,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="全能生活本">
   <meta name="theme-color" content="#ffd9e8">
+  <!-- 静态内嵌彩虹图标 (base64) 确保主屏幕正确显示 -->
+  <link rel="apple-touch-icon" href="data:image/png;base64,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" />
+  <link rel="icon" type="image/png" sizes="512x512" href="data:image/png;base64,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" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -50,7 +53,9 @@
     .cat-icon { background: #fffaf0; border-radius: 60px; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; border: 2px solid #ffce9e; cursor: pointer; }
     .cat-icon.active { background: var(--cat-active); border-color: #b45a2b; color: white; }
     .record-form-icon { background: #fff6e8; border-radius: 40px; padding: 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-    .record-form-icon input, .record-form-icon select { flex: 1; padding: 12px; border-radius: 60px; border: 2px solid #f7ad6a; background: white; font-size: 0.9rem; }
+    .record-form-icon input, .record-form-icon select { padding: 12px; border-radius: 60px; border: 2px solid #f7ad6a; background: white; font-size: 0.9rem; }
+    .double-input { display: flex; gap: 10px; flex: 2; }
+    .double-input input { flex: 1; min-width: 0; }
     .add-btn { background: #b8e0b0; border: none; border-radius: 60px; padding: 12px 20px; font-weight: bold; cursor: pointer; transition: 0.1s; }
     .add-btn:active { transform: scale(0.96); }
     .month-selector { display: flex; align-items: center; justify-content: space-between; background: #fff3e0; border-radius: 60px; padding: 8px 16px; margin-bottom: 16px; }
@@ -221,16 +226,19 @@
       <div class="collapse-panel"><div class="collapse-header" id="bkYearlyHeader">📊 年度收支汇总 <span>▼</span></div><div class="collapse-content" id="bkYearlyContent"><div class="chart-switch" id="bkChartSwitch"><button class="switch-btn active" data-mode="month">📅 月视图</button><button class="switch-btn" data-mode="year">📆 年视图</button></div><div id="bkYearPickerContainer" class="month-year-picker"><select id="bkYearlyYearSelect"></select> 年</div><div id="bkYearRangeContainer" class="month-year-picker" style="display:none;"><select id="bkYearStartSelect"></select> 年 至 <select id="bkYearEndSelect"></select> 年</div><div class="table-scroll" id="bkTableContainer"></div></div></div>
       <div class="type-toggle" id="bkTypeToggle"><div class="type-btn active" data-type="expense">💸 支出</div><div class="type-btn" data-type="income">💰 收入</div></div>
       <div class="category-grid" id="bkCategoryGrid"></div>
+      <!-- 记账表单：金额和备注同行各占一半 -->
       <div class="record-form-icon">
-        <input type="number" id="bkAmount" placeholder="金额" step="0.01">
-        <input type="text" id="bkNote" placeholder="备注">
+        <div class="double-input">
+          <input type="number" id="bkAmount" placeholder="金额" step="0.01">
+          <input type="text" id="bkNote" placeholder="备注">
+        </div>
         <input type="date" id="bkDate">
         <button class="add-btn" id="addBkBtn">➕ 添加</button>
       </div>
       <div class="month-selector"><button class="month-btn" id="prevMonthBk">←</button><span class="current-month" id="currentMonthBk"></span><button class="month-btn" id="nextMonthBk">→</button></div>
       <div class="month-summary"><div class="summary-item"><div class="summary-label">总收入</div><div class="summary-number income-num" id="monthIncomeBk">0</div></div><div class="summary-item"><div class="summary-label">总支出</div><div class="summary-number expense-num" id="monthExpenseBk">0</div></div><div class="summary-item"><div class="summary-label">结余</div><div class="summary-number" id="monthBalanceBk">0</div></div></div>
       
-      <!-- 支出排行卡片 (重构布局：标题+按钮靠右) -->
+      <!-- 支出排行卡片（标题+按钮下一行靠右） -->
       <div id="expenseRankingContainer" class="rank-card"></div>
       
       <div class="pie-charts-row"><div class="pie-chart-card"><div class="pie-title">📉 支出构成</div><canvas id="expensePieChart" width="200" height="200"></canvas></div><div class="pie-chart-card"><div class="pie-title">📈 收入构成</div><canvas id="incomePieChart" width="200" height="200"></canvas></div></div>
@@ -238,7 +246,7 @@
     </div>
   </div>
 
-  <!-- 记账年度统计弹窗（已删除按钮，但保留弹窗结构以防其他地方引用，实际无入口） -->
+  <!-- 记账年度统计弹窗（已删除按钮，保留结构无入口） -->
   <div id="yearlyStatsModal" class="record-modal" style="display:none;"><div class="record-modal-content"><div style="display:flex; justify-content:space-between;"><span class="section-title">📊 年度统计</span><button id="closeYearlyModalBtn" style="background:none; border:none; font-size:1.5rem;">✕</button></div><div><canvas id="yearlyBarChart" width="400" height="200"></canvas><div id="yearlyTotalSpan"></div></div></div></div>
 
   <!-- 记工时视图 -->
@@ -416,12 +424,14 @@
   }
 
   // ===================== 记账模块 =====================
-  function updateBkDateInput(){
-    const year = currentBkYear;
-    const month = currentBkMonth;
-    const defaultDate = `${year}-${String(month+1).padStart(2,'0')}-01`;
-    const bkDateInput = document.getElementById('bkDate');
-    if(bkDateInput) bkDateInput.value = defaultDate;
+  // 日期输入框默认显示今天（不随月份切换而重置）
+  function setDefaultDateInput() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const dateInput = document.getElementById('bkDate');
+    if(dateInput && !dateInput.value) dateInput.value = `${yyyy}-${mm}-${dd}`;
   }
   function renderBkYearlySummary(){
     const mode = bkChartMode;
@@ -440,7 +450,6 @@
         html += `<tr><td style="font-weight:600;">${i+1}月</td><td>${inc.toFixed(2)}</td><td>${exp.toFixed(2)}</td><td style="color:${balColor}">${bal.toFixed(2)}</td></tr>`;
       }
       html += `</tbody><tfoot><tr style="background:#ffefdb; font-weight:800;"><td>总计</td><td>${totalInc.toFixed(2)}</td><td>${totalExp.toFixed(2)}</td><td style="color:${totalBal>=0?'#2a7f4a':'#e06c3c'}">${totalBal.toFixed(2)}</td></tr></tfoot>`;
-
       container.innerHTML = html;
     } else {
       let startYear = parseInt(document.getElementById('bkYearStartSelect').value);
@@ -482,7 +491,14 @@
     let amount=parseFloat(document.getElementById('bkAmount').value); 
     if(isNaN(amount)||amount<=0) return; 
     let userDate = document.getElementById('bkDate').value;
-    if(!userDate){ userDate = `${currentBkYear}-${String(currentBkMonth+1).padStart(2,'0')}-01`; }
+    if(!userDate){
+      // 如果用户没填日期（理论上不会，因为默认有值），使用今天
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      userDate = `${yyyy}-${mm}-${dd}`;
+    }
     bkRecords.push({
       id:Date.now(),
       type:currentBkType,
@@ -496,7 +512,7 @@
     renderBkYearlySummary(); 
     document.getElementById('bkAmount').value=''; 
     document.getElementById('bkNote').value=''; 
-    updateBkDateInput();
+    // 不清空日期，保留当前日期（用户可手动修改）
     haptic(); 
   }
   function changeBkMonth(delta){ 
@@ -506,7 +522,7 @@
     currentBkYear=ny; currentBkMonth=nm; 
     document.getElementById('currentMonthBk').innerText=`${currentBkYear}年 ${currentBkMonth+1}月`; 
     refreshBookkeepingUI();
-    updateBkDateInput();
+    // 日期输入框不重置，保留用户选择
     if(rankMode === 'month') { rankYear = currentBkYear; rankMonth = currentBkMonth; renderExpenseRanking(); }
     else { rankYear = currentBkYear; renderExpenseRanking(); }
   }
@@ -547,7 +563,6 @@
     }
     let sorted = Array.from(catAmounts.entries()).sort((a,b)=>b[1]-a[1]);
     let maxAmount = sorted.length ? sorted[0][1] : 0;
-    // 构建卡片：标题 + 按钮行（靠右）+ 时间导航 + 列表
     let html = `<div class="rank-title">📊 支出分类排行</div>`;
     html += `<div class="rank-mode-bar"><button class="rank-mode-btn ${rankMode==='month'?'active':''}" data-mode="month">📅 本月</button><button class="rank-mode-btn ${rankMode==='year'?'active':''}" data-mode="year">📆 全年</button></div>`;
     html += `<div class="rank-time-nav"><button class="rank-arrow" id="rankPrevBtn">←</button><span class="rank-time-text" id="rankTimeLabel"></span><button class="rank-arrow" id="rankNextBtn">→</button></div>`;
@@ -1123,6 +1138,7 @@
 
   function initAll(){
     loadAll(); updatePasswordLockStatus();
+    setDefaultDateInput(); // 设置日期默认为今天
     document.getElementById('themeDefaultBtn').onclick=()=>setTheme('default');
     document.getElementById('themeMintBtn').onclick=()=>setTheme('mint');
     document.getElementById('themeSkyBtn').onclick=()=>setTheme('sky');
@@ -1177,7 +1193,6 @@
     document.getElementById('closeWorkModalBtn').onclick = ()=>document.getElementById('workRecordsModal').classList.remove('show');
     document.querySelectorAll('#bkTypeToggle .type-btn').forEach(btn=>btn.addEventListener('click',()=>{ document.querySelectorAll('#bkTypeToggle .type-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); currentBkType=btn.dataset.type; renderBkCategoryGrid(); }));
     renderBkCategoryGrid(); refreshBookkeepingUI();
-    updateBkDateInput();
     renderExpenseRanking();
     renderNoteCategories(); renderNoteCards(); loadNoteToEditor();
     document.getElementById('newNoteBtn').onclick=newNote;
