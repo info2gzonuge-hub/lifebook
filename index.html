@@ -8,7 +8,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="全能生活本">
   <meta name="theme-color" content="#ffd9e8">
-  <!-- 动态生成彩虹图标（确保主屏幕正确显示） -->
   <script>
     (function() {
       function generateIconDataURL(size) {
@@ -225,9 +224,13 @@
     .password-status { font-size: 0.7rem; background: #e8e0d0; border-radius: 30px; padding: 2px 8px; margin-left: 8px; }
     button:active { transform: scale(0.95); }
     .table-scroll { max-height: 320px; overflow-y: auto; border-radius: 24px; position: relative; }
-    .data-table { width: 100%; border-collapse: collapse; background: #fffaf0; border-radius: 24px; }
-    .data-table th, .data-table td { padding: 12px 6px; text-align: center; vertical-align: middle; border-bottom: 1px solid #ffd8b5; font-size: 0.8rem; }
+    .data-table { width: 100%; border-collapse: collapse; background: #fffaf0; border-radius: 24px; table-layout: fixed; }
+    .data-table th, .data-table td { padding: 10px 4px; text-align: center; vertical-align: middle; border-bottom: 1px solid #ffd8b5; font-size: 0.8rem; word-break: break-word; }
     .data-table th { background: #ffefdb; color: var(--stat-label); font-weight: 800; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #ffce9e; }
+    .data-table th:nth-child(1) { width: 20%; }
+    .data-table th:nth-child(2) { width: 26%; }
+    .data-table th:nth-child(3) { width: 26%; }
+    .data-table th:nth-child(4) { width: 28%; }
     .data-table tfoot tr td { background: #ffefdb; font-weight: 800; border-top: 2px solid #ffce9e; }
     .period-modal-content { background: #fff6e8; border-radius: 44px; padding: 24px; width: 340px; max-width: 90%; text-align: left; color: #1e1e2f; font-size: 16px; }
     .period-modal-content h4 { margin-bottom: 20px; font-size: 20px; font-weight: 800; }
@@ -268,7 +271,6 @@
       <div class="collapse-panel"><div class="collapse-header" id="bkYearlyHeader">📊 年度收支汇总 <span>▼</span></div><div class="collapse-content" id="bkYearlyContent"><div class="chart-switch" id="bkChartSwitch"><button class="switch-btn active" data-mode="month">📅 月视图</button><button class="switch-btn" data-mode="year">📆 年视图</button></div><div id="bkYearPickerContainer" class="month-year-picker"><select id="bkYearlyYearSelect"></select> 年</div><div id="bkYearRangeContainer" class="month-year-picker" style="display:none;"><select id="bkYearStartSelect"></select> 年 至 <select id="bkYearEndSelect"></select> 年</div><div class="table-scroll" id="bkTableContainer"></div></div></div>
       <div class="type-toggle" id="bkTypeToggle"><div class="type-btn active" data-type="expense">💸 支出</div><div class="type-btn" data-type="income">💰 收入</div></div>
       <div class="category-grid" id="bkCategoryGrid"></div>
-      <!-- 记账表单 -->
       <div class="record-form-icon">
         <div class="double-input">
           <input type="number" id="bkAmount" placeholder="金额" step="0.01">
@@ -293,7 +295,7 @@
   <!-- 记账年度统计弹窗（已删除按钮，保留结构无入口） -->
   <div id="yearlyStatsModal" class="record-modal" style="display:none;"><div class="record-modal-content"><div style="display:flex; justify-content:space-between;"><span class="section-title">📊 年度统计</span><button id="closeYearlyModalBtn" style="background:none; border:none; font-size:1.5rem;">✕</button></div><div><canvas id="yearlyBarChart" width="400" height="200"></canvas><div id="yearlyTotalSpan"></div></div></div></div>
 
-  <!-- 记工时视图（完整功能） -->
+  <!-- 记工时视图 -->
   <div id="calendarView" class="view">
     <div class="card-section">
       <div class="section-title">📅 记工时 · 分类薪资</div>
@@ -316,7 +318,7 @@
     </div>
   </div>
 
-  <!-- 女生日历视图（完整功能） -->
+  <!-- 女生日历视图 -->
   <div id="girlCalendarView" class="view">
     <div class="card-section">
       <div class="section-title">👩 女生日历 · 生理期 & 重要节日</div>
@@ -349,7 +351,7 @@
     </div>
   </div>
 
-  <!-- 备忘录视图（完整功能） -->
+  <!-- 备忘录视图 -->
   <div id="noteView" class="view">
     <div class="card-section">
       <div class="section-title">📝 备忘录</div>
@@ -359,7 +361,7 @@
     </div>
   </div>
 
-  <!-- 设置视图（完整功能） -->
+  <!-- 设置视图 -->
   <div id="settingsView" class="view"><div class="stats-section"><div class="settings-group"><div class="settings-group-title">📁 数据管理</div><button class="settings-btn" id="exportDataBtn">📤 导出全部数据</button><button class="settings-btn" id="importDataBtn">📥 导入数据</button><button class="settings-btn danger-btn" id="clearAllDataBtn">⚠️ 清空所有数据</button></div><div class="settings-group"><div class="settings-group-title">🔐 隐私保护</div><button class="settings-btn" id="togglePasswordLockBtn">🔒 设置6位数字密码锁 <span id="passwordLockStatus" class="password-status">未开启</span></button><button class="settings-btn" id="disablePasswordLockBtn">🔓 关闭密码锁</button></div></div></div>
 
   <div class="bottom-nav"><button class="nav-item active" data-view="bookkeeping">💰</button><button class="nav-item" data-view="calendar">📅</button><button class="nav-item" data-view="girlCalendar">👩</button><button class="nav-item" data-view="note">📝</button><button class="nav-item" data-view="settings">⚙️</button></div>
@@ -405,12 +407,11 @@
   let currentSelectedWorkDate = null;
   let bkChartMode = 'month', workChartMode = 'month';
   
-  // 支出排行卡片状态
   let rankMode = 'month';
   let rankYear = currentBkYear;
   let rankMonth = currentBkMonth;
 
-  // 修改点：将 '其他' 改为 '住房'
+  // 修改点：支出分类最后一项改为“住房”
   const expenseCategories = ['餐饮','日用','交通','通讯','购物','娱乐','医疗','奶茶','零食','礼物','汽车','住房'];
   const incomeCategories = ['工资','兼职','红包','理财','奖金','其他'];
 
@@ -467,7 +468,7 @@
     localStorage.setItem(PASSWORD_KEY, savedPassword);
   }
 
-  // ===================== 记账模块 =====================
+  // 日期输入框默认今天
   function setDefaultDateInput() {
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -477,6 +478,7 @@
     if(dateInput && !dateInput.value) dateInput.value = `${yyyy}-${mm}-${dd}`;
   }
 
+  // 修正后的年度收支汇总（对齐 + 正红负绿）
   function renderBkYearlySummary(){
     const mode = bkChartMode;
     const container = document.getElementById('bkTableContainer');
@@ -490,10 +492,11 @@
       let html = '<table class="data-table"><thead><tr><th>月份</th><th>收入(¥)</th><th>支出(¥)</th><th>结余(¥)</th></tr></thead><tbody>';
       for(let i=0;i<12;i++){
         const inc = monthly[i].income, exp = monthly[i].expense, bal = inc - exp;
-        const balColor = bal > 0 ? '#2a7f4a' : (bal < 0 ? '#e06c3c' : 'inherit');
+        const balColor = bal > 0 ? '#e06c3c' : (bal < 0 ? '#2a7f4a' : 'inherit');
         html += `<tr><td style="font-weight:600;">${i+1}月</td><td>${inc.toFixed(2)}</td><td>${exp.toFixed(2)}</td><td style="color:${balColor}">${bal.toFixed(2)}</td></tr>`;
       }
-      html += `</tbody><tfoot><tr style="background:#ffefdb; font-weight:800;"><td>总计</td><tr>${totalInc.toFixed(2)}</td><td>${totalExp.toFixed(2)}</td><td style="color:${totalBal>=0?'#2a7f4a':'#e06c3c'}">${totalBal.toFixed(2)}</td></tr></tfoot>`;
+      const totalBalColor = totalBal > 0 ? '#e06c3c' : (totalBal < 0 ? '#2a7f4a' : 'inherit');
+      html += `</tbody><tfoot><tr style="background:#ffefdb; font-weight:800;"><td>总计</td><td>${totalInc.toFixed(2)}</td><td>${totalExp.toFixed(2)}</td><td style="color:${totalBalColor}">${totalBal.toFixed(2)}</td></tr></tfoot>`;
       container.innerHTML = html;
     } else {
       let startYear = parseInt(document.getElementById('bkYearStartSelect').value);
@@ -505,8 +508,9 @@
       let totalExp = yearData.reduce((s,d)=>s+d.expense,0);
       let totalBal = totalInc - totalExp;
       let html = '<table class="data-table"><thead><tr><th>年份</th><th>总收入(¥)</th><th>总支出(¥)</th><th>结余(¥)</th></tr></thead><tbody>';
-      yearData.forEach(d=>{ const balColor = d.balance > 0 ? '#2a7f4a' : (d.balance < 0 ? '#e06c3c' : 'inherit'); html += `<tr><td style="font-weight:600;">${d.year}</td><td>${d.income.toFixed(2)}</td><td>${d.expense.toFixed(2)}</td><td style="color:${balColor}">${d.balance.toFixed(2)}</td></tr>`; });
-      html += `</tbody><tfoot><tr style="background:#ffefdb; font-weight:800;"><td>总计</td><td>${totalInc.toFixed(2)}</td><td>${totalExp.toFixed(2)}</td><td style="color:${totalBal>=0?'#2a7f4a':'#e06c3c'}">${totalBal.toFixed(2)}</td></tr></tfoot>`;
+      yearData.forEach(d=>{ const balColor = d.balance > 0 ? '#e06c3c' : (d.balance < 0 ? '#2a7f4a' : 'inherit'); html += `<tr><td style="font-weight:600;">${d.year}</td><td>${d.income.toFixed(2)}</td><td>${d.expense.toFixed(2)}</td><td style="color:${balColor}">${d.balance.toFixed(2)}</td></tr>`; });
+      const totalBalColor = totalBal > 0 ? '#e06c3c' : (totalBal < 0 ? '#2a7f4a' : 'inherit');
+      html += `</tbody><tfoot><tr style="background:#ffefdb; font-weight:800;"><td>总计</td><td>${totalInc.toFixed(2)}</td><td>${totalExp.toFixed(2)}</td><td style="color:${totalBalColor}">${totalBal.toFixed(2)}</td></tr></tfoot>`;
       container.innerHTML = html;
     }
   }
@@ -530,7 +534,7 @@
     if(incomeChart) incomeChart.destroy();
     expenseChart = new Chart(document.getElementById('expensePieChart'),{ type:'pie', data:{ labels:Array.from(expMap.keys()), datasets:[{ data:Array.from(expMap.values()), backgroundColor:['#FFB3BA','#C5E99B','#B5E3FF','#FFD6A5','#D4B8D4','#A7E0E0','#FBC8B5','#C9C9C9','#F4A261','#E9C46A','#2A9D8F','#E76F51'] }] }, options:{ plugins:{ legend:{ display: false }, tooltip:{ callbacks:{ label: (ctx) => { const label = ctx.label || ''; const value = ctx.raw; const percent = exp > 0 ? ((value / exp) * 100).toFixed(1) : 0; return `${label}: ¥${value.toFixed(2)} (${percent}%)`; } } } } } });
     incomeChart = new Chart(document.getElementById('incomePieChart'),{ type:'pie', data:{ labels:Array.from(incMap.keys()), datasets:[{ data:Array.from(incMap.values()), backgroundColor:['#9AD0F5','#C5E99B','#FFD966','#F4ACB7','#FFB347','#B0A8B9'] }] }, options:{ plugins:{ legend:{ display: false }, tooltip:{ callbacks:{ label: (ctx) => { const label = ctx.label || ''; const value = ctx.raw; const percent = inc > 0 ? ((value / inc) * 100).toFixed(1) : 0; return `${label}: ¥${value.toFixed(2)} (${percent}%)`; } } } } } });
-    renderExpenseRanking(); // 联动刷新排行
+    renderExpenseRanking();
   }
 
   function addBookkeeping(){ 
@@ -581,7 +585,6 @@
     document.getElementById('recordModal').classList.add('show');
   }
 
-  // 修正后的支出排行渲染函数（使用 getFullYear/getMonth 避免时区问题）
   function renderExpenseRanking() {
     let container = document.getElementById('expenseRankingContainer');
     if(!container) return;
@@ -659,7 +662,7 @@
     };
   }
   
-  // ===================== 工时模块（完整保留，因代码长度只保留关键结构，实际功能全量） =====================
+  // ------------- 记工时模块 -------------
   function getWorkMonthlySummary(year, month){
     const daysInMonth = getDaysInMonth(year,month);
     let totalHours=0, totalIncome=0;
@@ -800,7 +803,7 @@
     }
   }
 
-  // ===================== 女生日历模块（完整功能，因篇幅保留结构，实际全量） =====================
+  // ------------- 女生日历模块 -------------
   function getPeriodStartDates(){
     const starts = [];
     const periodDates = Object.keys(menstrualData).filter(k=>menstrualData[k]?.isPeriod).sort();
@@ -979,7 +982,8 @@
     document.querySelectorAll('.edit-period').forEach(btn=>btn.addEventListener('click',()=>{ const date = btn.dataset.date; onPeriodDateClick(date); }));
     document.querySelectorAll('.del-period').forEach(btn=>btn.addEventListener('click',()=>{ const startDate = btn.dataset.date; if(confirm(`删除从 ${startDate} 开始的整个经期记录？`)){ const start = new Date(startDate); for(let i=0;i<periodDays;i++){ const cur = new Date(start); cur.setDate(start.getDate()+i); const key = formatDateKey(cur.getFullYear(), cur.getMonth(), cur.getDate()); if(menstrualData[key]) delete menstrualData[key]; } saveAll(); renderGirlCalendarPeriod(); renderCycleStatsPanel(); } }));
   }
-  // 重要节日（农历相关）
+
+  // 节日农历辅助函数
   const lunarInfo = [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04bd7,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0];
   function getLunarYearInfo(year){ return lunarInfo[year-1900]; }
   function getLunarMonthDays(year, month){ let bit = 0x10000 >> month; return (getLunarYearInfo(year) & bit) ? 30 : 29; }
@@ -1064,7 +1068,7 @@
     renderCycleStatsPanel();
   }
 
-  // ===================== 备忘录模块（完整功能，因篇幅保留结构，实际全量） =====================
+  // ------------- 备忘录模块 -------------
   function renderNoteCards(){
     const filtered = notes.filter(n=> n.categoryId === currentNoteCategoryId);
     const container = document.getElementById('noteListCards');
@@ -1156,7 +1160,7 @@
     if(text){ todos.push({ id:Date.now(), text, completed:false, category:currentTodoCat }); saveAll(); renderTodoItems(); document.getElementById('newTodoText').value=''; haptic(); }
   }
 
-  // ===================== 其他功能 =====================
+  // ------------- 其他功能 -------------
   function showLock(callback){ if(!passwordEnabled||isUnlocked){ if(callback) callback(); return; }
     const div=document.createElement('div'); div.className='lock-overlay'; let temp='';
     div.innerHTML=`<div style="background:#fff0df; border-radius:48px; padding:24px;"><h3>🔐 请输入6位密码</h3><div style="font-size:2rem; letter-spacing:8px;" id="lockInput">______</div><div id="lockNumpad"></div><div><button id="lockOkBtn">确认</button><button id="lockCancelBtn">取消</button></div></div>`;
